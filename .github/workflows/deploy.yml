@@ -153,7 +153,8 @@ jobs:
         with:
           status: ${{ job.status }}
           text: 'Deployment workflow completed'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         continue-on-error: true
       
       - name: Create deployment summary
