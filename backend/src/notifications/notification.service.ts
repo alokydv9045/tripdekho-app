@@ -27,18 +27,13 @@ export class NotificationService {
     html: string;
   }): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(
-        `Email not sent to ${opts.to} because SMTP is not configured.`,
-      );
+      this.logger.warn(`Email not sent to ${opts.to} because SMTP is not configured.`);
       return;
     }
-
+    
     try {
       await this.transporter.sendMail({
-        from: this.configService.get<string>(
-          'EMAIL_FROM',
-          '"TripDekho" <noreply@tripdekho.com>',
-        ),
+        from: this.configService.get<string>('EMAIL_FROM', '"TripDekho" <noreply@tripdekho.com>'),
         to: opts.to,
         subject: opts.subject,
         html: opts.html,
@@ -77,10 +72,7 @@ export class NotificationService {
     });
   }
 
-  async sendKycSubmittedEmail(vendor: {
-    name: string;
-    email: string;
-  }): Promise<void> {
+  async sendKycSubmittedEmail(vendor: { name: string; email: string }): Promise<void> {
     await this.sendEmail({
       to: vendor.email,
       subject: 'KYC Documents Received — TripDekho',
@@ -95,13 +87,10 @@ export class NotificationService {
     });
   }
 
-  async sendKycApprovedEmail(vendor: {
-    name: string;
-    email: string;
-  }): Promise<void> {
+  async sendKycApprovedEmail(vendor: { name: string; email: string }): Promise<void> {
     await this.sendEmail({
       to: vendor.email,
-      subject: "✅ KYC Approved — You're Verified on TripDekho!",
+      subject: '✅ KYC Approved — You\'re Verified on TripDekho!',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #22c55e;">Congratulations, ${vendor.name}! You're now verified! 🎉</h2>
@@ -121,10 +110,7 @@ export class NotificationService {
     });
   }
 
-  async sendKycRejectedEmail(
-    vendor: { name: string; email: string },
-    reason?: string,
-  ): Promise<void> {
+  async sendKycRejectedEmail(vendor: { name: string; email: string }, reason?: string): Promise<void> {
     await this.sendEmail({
       to: vendor.email,
       subject: 'KYC Review — Action Required',
@@ -147,24 +133,16 @@ export class NotificationService {
   // ─── WhatsApp Cloud API Methods ─────────────────────────────────────────────
 
   async sendWhatsApp(
-    phone: string,
-    message: string,
-    templateData?: {
-      contentSid: string;
-      contentVariables: Record<string, string>;
-    },
+    phone: string, 
+    message: string, 
+    templateData?: { contentSid: string; contentVariables: Record<string, string> }
   ): Promise<void> {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
-    const fromNumber = this.configService.get<string>(
-      'TWILIO_PHONE_NUMBER',
-      'whatsapp:+14155238886',
-    );
+    const fromNumber = this.configService.get<string>('TWILIO_PHONE_NUMBER', 'whatsapp:+14155238886');
 
     if (!accountSid || !authToken || accountSid.includes('your_')) {
-      this.logger.warn(
-        `[WHATSAPP FALLBACK] To: ${phone} | Message: ${message.substring(0, 50)}...`,
-      );
+      this.logger.warn(`[WHATSAPP FALLBACK] To: ${phone} | Message: ${message.substring(0, 50)}...`);
       return;
     }
 
@@ -176,20 +154,15 @@ export class NotificationService {
 
     try {
       const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-      const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString(
-        'base64',
-      );
-
+      const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+      
       const params = new URLSearchParams();
       params.append('To', formattedTo);
       params.append('From', fromNumber);
-
+      
       if (templateData) {
         params.append('ContentSid', templateData.contentSid);
-        params.append(
-          'ContentVariables',
-          JSON.stringify(templateData.contentVariables),
-        );
+        params.append('ContentVariables', JSON.stringify(templateData.contentVariables));
       } else {
         params.append('Body', message);
       }
@@ -197,7 +170,7 @@ export class NotificationService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          Authorization: `Basic ${basicAuth}`,
+          'Authorization': `Basic ${basicAuth}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: params,
@@ -205,14 +178,10 @@ export class NotificationService {
 
       if (!response.ok) {
         const err = await response.text();
-        this.logger.error(
-          `Twilio WhatsApp API error for ${formattedTo}: ${err}`,
-        );
+        this.logger.error(`Twilio WhatsApp API error for ${formattedTo}: ${err}`);
       } else {
         const data = await response.json();
-        this.logger.log(
-          `WhatsApp message sent to ${formattedTo} with Twilio SID: ${data.sid}`,
-        );
+        this.logger.log(`WhatsApp message sent to ${formattedTo} with Twilio SID: ${data.sid}`);
       }
     } catch (err) {
       this.logger.error(`Failed to send WhatsApp to ${formattedTo}:`, err);
@@ -238,7 +207,7 @@ export class NotificationService {
   async sendMetaWhatsApp(phone: string, message: string): Promise<void> {
     const token = this.configService.get<string>('META_WHATSAPP_TOKEN');
     const phoneId = this.configService.get<string>('META_WHATSAPP_PHONE_ID');
-
+    
     // Normalize phone number: strip + and leading 0s, ensure country code.
     let formattedPhone = phone.replace(/\D/g, '');
     if (formattedPhone.length === 10) {
@@ -246,46 +215,34 @@ export class NotificationService {
     }
 
     if (!token || !phoneId) {
-      this.logger.warn(
-        `[META WHATSAPP FALLBACK] To: ${formattedPhone} | Message: ${message}`,
-      );
+      this.logger.warn(`[META WHATSAPP FALLBACK] To: ${formattedPhone} | Message: ${message}`);
       return;
     }
 
     try {
-      const response = await fetch(
-        `https://graph.facebook.com/v17.0/${phoneId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: formattedPhone,
-            type: 'text',
-            text: { body: message },
-          }),
+      const response = await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: formattedPhone,
+          type: 'text',
+          text: { body: message },
+        }),
+      });
 
       if (!response.ok) {
         const errText = await response.text();
-        this.logger.error(
-          `Meta WhatsApp failed for ${formattedPhone}: ${errText}`,
-        );
+        this.logger.error(`Meta WhatsApp failed for ${formattedPhone}: ${errText}`);
       } else {
         const data = await response.json();
-        this.logger.log(
-          `Meta WhatsApp message sent to ${formattedPhone}. Message ID: ${data.messages?.[0]?.id}`,
-        );
+        this.logger.log(`Meta WhatsApp message sent to ${formattedPhone}. Message ID: ${data.messages?.[0]?.id}`);
       }
     } catch (err) {
-      this.logger.error(
-        `Failed to send Meta WhatsApp to ${formattedPhone}:`,
-        err,
-      );
+      this.logger.error(`Failed to send Meta WhatsApp to ${formattedPhone}:`, err);
     }
   }
 }

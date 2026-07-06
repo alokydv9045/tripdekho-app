@@ -15,12 +15,12 @@ import { ReferralsModule } from '../referrals/referrals.module';
       LoyaltyPointEntity,
       PointTransactionEntity,
       UserEntity,
-      RewardRuleEntity,
+      RewardRuleEntity
     ]),
-    ReferralsModule,
+    ReferralsModule
   ],
   controllers: [RewardsController],
   providers: [RewardsService, RewardsListener],
-  exports: [RewardsService],
+  exports: [RewardsService]
 })
 export class RewardsModule {}

@@ -2,11 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoyaltyPointEntity } from '../entities/loyalty-point.entity';
-import {
-  PointTransactionEntity,
-  TransactionType,
-  TransactionSource,
-} from '../entities/point-transaction.entity';
+import { PointTransactionEntity, TransactionType, TransactionSource } from '../entities/point-transaction.entity';
 import { UserEntity } from '../entities/user.entity';
 
 @Injectable()
@@ -41,9 +37,7 @@ export class RewardsService {
       } catch (error: any) {
         // Postgres unique violation (23505) or SQLite equivalent
         if (error.code === '23505' || error.message.includes('UNIQUE')) {
-          const existing = await this.loyaltyPointRepository.findOne({
-            where: { user: { id: userId } },
-          });
+          const existing = await this.loyaltyPointRepository.findOne({ where: { user: { id: userId } } });
           if (existing) return existing;
         }
         throw error;
@@ -60,16 +54,16 @@ export class RewardsService {
   }
 
   async creditPoints(
-    userId: string,
-    amount: number,
-    source: TransactionSource,
-    referenceId?: string,
-    description?: string,
+    userId: string, 
+    amount: number, 
+    source: TransactionSource, 
+    referenceId?: string, 
+    description?: string
   ) {
     if (referenceId) {
       // Idempotency check
       const existingTx = await this.transactionRepository.findOne({
-        where: { referenceId, source, user: { id: userId } },
+        where: { referenceId, source, user: { id: userId } }
       });
       if (existingTx) return existingTx;
     }
@@ -84,24 +78,19 @@ export class RewardsService {
       amount,
       source,
       referenceId,
-      description,
+      description
     });
-
+    
     await this.transactionRepository.save(tx);
 
     const balance = await this.getBalance(userId);
     balance.balance += amount;
     balance.totalEarned += amount;
-
+    
     return this.loyaltyPointRepository.save(balance);
   }
 
-  async deductPoints(
-    userId: string,
-    amount: number,
-    source: TransactionSource,
-    description?: string,
-  ) {
+  async deductPoints(userId: string, amount: number, source: TransactionSource, description?: string) {
     const balance = await this.getBalance(userId);
     if (balance.balance < amount) {
       throw new BadRequestException('Insufficient Wander Points');
@@ -116,13 +105,13 @@ export class RewardsService {
       type: TransactionType.DEBIT,
       amount,
       source,
-      description,
+      description
     });
     await this.transactionRepository.save(tx);
 
     balance.balance -= amount;
     balance.totalRedeemed += amount;
-
+    
     return this.loyaltyPointRepository.save(balance);
   }
 }

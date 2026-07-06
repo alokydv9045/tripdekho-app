@@ -31,11 +31,7 @@ export class PayoutEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({
-    type: 'simple-enum',
-    enum: PayoutStatus,
-    default: PayoutStatus.HOLD,
-  })
+  @Column({ type: 'simple-enum', enum: PayoutStatus, default: PayoutStatus.HOLD })
   status: PayoutStatus;
 
   @Column({ nullable: true })

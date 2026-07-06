@@ -81,14 +81,7 @@ export class RegisterUserHandler implements ICommandHandler<RegisterUserCommand>
 
     this.eventEmitter.emit(
       EventConstants.USER_REGISTERED,
-      new UserRegisteredEvent(
-        user.id,
-        user.email,
-        user.name,
-        referralCode,
-        generatedPassword,
-        user.phone,
-      ),
+      new UserRegisteredEvent(user.id, user.email, user.name, referralCode, generatedPassword, user.phone),
     );
 
     return { ...result, tempPassword: generatedPassword };

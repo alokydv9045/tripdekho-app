@@ -13,11 +13,7 @@ export class MessageEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(
-    () => ConversationEntity,
-    (conversation) => conversation.messages,
-    { onDelete: 'CASCADE' },
-  )
+  @ManyToOne(() => ConversationEntity, (conversation) => conversation.messages, { onDelete: 'CASCADE' })
   conversation: ConversationEntity;
 
   @ManyToOne(() => UserEntity, { eager: true, onDelete: 'CASCADE' })

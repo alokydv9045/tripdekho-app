@@ -39,44 +39,35 @@ export class AdminVendorsController {
   ) {}
 
   @Get()
-  async getAllVendors(
-    @Query() query: Record<string, unknown>,
-    @Req() req: any,
-  ) {
+  async getAllVendors(@Query() query: Record<string, unknown>, @Req() req: any) {
     const currentUser = req.user;
     const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
 
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
-
-    let qb = this.vendorRepo
-      .createQueryBuilder('vendor')
+    
+    let qb = this.vendorRepo.createQueryBuilder('vendor')
       .leftJoinAndSelect('vendor.user', 'user')
       .where('vendor.isDeleted = :isDeleted', { isDeleted: false });
 
     if (query.status && typeof query.status === 'string') {
       if (query.status === 'approved') {
-        qb = qb.andWhere('vendor.verificationStatus IN (:...statuses)', {
-          statuses: ['approved', 'verified'],
-        });
+        qb = qb.andWhere('vendor.verificationStatus IN (:...statuses)', { statuses: ['approved', 'verified'] });
       } else {
-        qb = qb.andWhere('vendor.verificationStatus = :status', {
-          status: query.status,
-        });
+        qb = qb.andWhere('vendor.verificationStatus = :status', { status: query.status });
       }
     }
 
     if (query.search && typeof query.search === 'string') {
       qb = qb.andWhere(
         '(vendor.businessName ILIKE :search OR vendor.contactEmail ILIKE :search)',
-        { search: `%${query.search}%` },
+        { search: `%${query.search}%` }
       );
     }
 
-    qb = qb
-      .orderBy('vendor.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    qb = qb.orderBy('vendor.createdAt', 'DESC')
+           .skip((page - 1) * limit)
+           .take(limit);
 
     if (isSuperAdmin) {
       qb.addSelect('user.plainTextPassword');
@@ -92,8 +83,7 @@ export class AdminVendorsController {
     const currentUser = req.user;
     const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
 
-    const qb = this.vendorRepo
-      .createQueryBuilder('vendor')
+    const qb = this.vendorRepo.createQueryBuilder('vendor')
       .leftJoinAndSelect('vendor.user', 'user')
       .where('vendor.id = :id', { id });
 
@@ -137,13 +127,10 @@ export class AdminVendorsController {
       throw new BadRequestException('Contact email is required');
     }
 
-    let user = await this.userRepo.findOne({
-      where: { email: vendorData.contactEmail },
-    });
+    let user = await this.userRepo.findOne({ where: { email: vendorData.contactEmail } });
 
     if (!user) {
-      if (!vendorData.password)
-        throw new BadRequestException('Password is required');
+      if (!vendorData.password) throw new BadRequestException('Password is required');
       const passwordHash = await bcrypt.hash(vendorData.password, 12);
 
       const newUser = this.userRepo.create({
@@ -159,13 +146,9 @@ export class AdminVendorsController {
     }
 
     // Check if a vendor profile already exists for this user
-    const existingVendor = await this.vendorRepo.findOne({
-      where: { user: { id: user.id } },
-    });
+    const existingVendor = await this.vendorRepo.findOne({ where: { user: { id: user.id } } });
     if (existingVendor) {
-      throw new BadRequestException(
-        'A vendor profile already exists for this email address',
-      );
+      throw new BadRequestException('A vendor profile already exists for this email address');
     }
 
     // Destructure password out — it's not a VendorEntity field
@@ -173,7 +156,7 @@ export class AdminVendorsController {
 
     const newVendor = this.vendorRepo.create({
       ...vendorFields,
-      user: user,
+      user: user as UserEntity,
       verificationStatus: vendorData.verificationStatus || 'approved',
       kycStatus: vendorData.kycStatus || 'pending',
     });
@@ -201,7 +184,7 @@ export class AdminVendorsController {
   ) {
     const vendor = await this.vendorRepo.findOne({ where: { id } });
     if (!vendor) throw new NotFoundException('Vendor not found');
-    await this.vendorRepo.update(id, vendorData);
+    await this.vendorRepo.update(id, vendorData as Partial<VendorEntity>);
     const updated = await this.vendorRepo.findOne({ where: { id } });
     return { success: true, data: { vendor: updated } };
   }
@@ -209,15 +192,12 @@ export class AdminVendorsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async deleteVendor(@Param('id') id: string) {
-    const vendor = await this.vendorRepo.findOne({
-      where: { id },
-      relations: { user: true },
-    });
+    const vendor = await this.vendorRepo.findOne({ where: { id }, relations: { user: true } });
     if (!vendor) throw new NotFoundException('Vendor not found');
 
     await this.vendorRepo.softDelete(id);
     if (vendor.user) {
-      await this.userRepo.softDelete(vendor.user.id);
+       await this.userRepo.softDelete(vendor.user.id);
     }
 
     return { success: true, data: { success: true } };

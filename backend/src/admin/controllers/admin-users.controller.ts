@@ -67,34 +67,23 @@ export class AdminUsersController {
     }
 
     if (isVerified !== undefined && isVerified !== '') {
-      queryBuilder.andWhere('user.isEmailVerified = :isVerified', {
-        isVerified: isVerified === 'true',
-      });
+      queryBuilder.andWhere('user.isEmailVerified = :isVerified', { isVerified: isVerified === 'true' });
     }
 
     if (isActive !== undefined && isActive !== '') {
-      queryBuilder.andWhere('user.isActive = :isActive', {
-        isActive: isActive === 'true',
-      });
+      queryBuilder.andWhere('user.isActive = :isActive', { isActive: isActive === 'true' });
     }
 
     if (search) {
-      queryBuilder.andWhere(
-        '(user.name ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${search}%` },
-      );
+      queryBuilder.andWhere('(user.name ILIKE :search OR user.email ILIKE :search)', { search: `%${search}%` });
     }
 
-    queryBuilder
-      .skip((page - 1) * limit)
-      .take(limit)
-      .orderBy('user.createdAt', 'DESC');
+    queryBuilder.skip((page - 1) * limit)
+                .take(limit)
+                .orderBy('user.createdAt', 'DESC');
 
     const [users, total] = await queryBuilder.getManyAndCount();
-    return {
-      success: true,
-      data: { users, total, page, limit, totalPages: Math.ceil(total / limit) },
-    };
+    return { success: true, data: { users, total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
   @Get(':id')
@@ -102,8 +91,7 @@ export class AdminUsersController {
     const currentUser = req.user;
     const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
 
-    const queryBuilder = this.userRepo
-      .createQueryBuilder('user')
+    const queryBuilder = this.userRepo.createQueryBuilder('user')
       .where('user.id = :id', { id });
 
     if (isSuperAdmin) {
@@ -119,9 +107,7 @@ export class AdminUsersController {
   async createUser(@Body() userData: CreateUserDto) {
     const { password, isVerified, ...otherData } = userData;
 
-    const existingUser = await this.userRepo.findOne({
-      where: { email: otherData.email },
-    });
+    const existingUser = await this.userRepo.findOne({ where: { email: otherData.email } });
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
@@ -152,7 +138,7 @@ export class AdminUsersController {
     if (userData.name !== undefined) updateData.name = userData.name;
     if (userData.email !== undefined) updateData.email = userData.email;
     if (userData.phone !== undefined) updateData.phone = userData.phone;
-    if (userData.role !== undefined) updateData.role = userData.role;
+    if (userData.role !== undefined) updateData.role = userData.role as UserRole;
 
     if (userData.password) {
       updateData.passwordHash = await bcrypt.hash(userData.password, 12);

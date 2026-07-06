@@ -11,13 +11,8 @@ import { Request, Response } from 'express';
 @Injectable()
 export class CorrelationInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { correlationId?: string }>();
-    const headers = request.headers as Record<
-      string,
-      string | string[] | undefined
-    >;
+    const request = context.switchToHttp().getRequest<Request & { correlationId?: string }>();
+    const headers = request.headers as Record<string, string | string[] | undefined>;
     const correlationId =
       (headers['x-correlation-id'] as string) || crypto.randomUUID();
 

@@ -82,11 +82,8 @@ export class TripRepository implements ITripRepository {
     if (params.city) {
       query.andWhere(
         new Brackets((qb) => {
-          qb.where('location.city ILIKE :city', {
-            city: `%${params.city}%`,
-          }).orWhere('location.state ILIKE :city', {
-            city: `%${params.city}%`,
-          });
+          qb.where('location.city ILIKE :city', { city: `%${params.city}%` })
+            .orWhere('location.state ILIKE :city', { city: `%${params.city}%` });
         }),
       );
     }
@@ -121,15 +118,11 @@ export class TripRepository implements ITripRepository {
     }
 
     if (params.startDate) {
-      query.andWhere('dates.startDate >= :startDate', {
-        startDate: params.startDate,
-      });
+      query.andWhere('dates.startDate >= :startDate', { startDate: params.startDate });
     }
 
     if (params.endDate) {
-      query.andWhere('dates.startDate <= :endDate', {
-        endDate: params.endDate,
-      });
+      query.andWhere('dates.startDate <= :endDate', { endDate: params.endDate });
     }
 
     // Custom sorting (applied BEFORE pagination for correct ordering)
@@ -158,11 +151,9 @@ export class TripRepository implements ITripRepository {
     return this.tripRepo.save(trip);
   }
 
-  async getVendorStats(
-    vendorIds: string[],
-  ): Promise<Record<string, { rating: number; count: number }>> {
+  async getVendorStats(vendorIds: string[]): Promise<Record<string, { rating: number, count: number }>> {
     if (!vendorIds.length) return {};
-
+    
     // We run a raw query or queryBuilder on reviews to aggregate by vendorId
     // Since reviews table joins on trip_id, we join trips to get vendorId
     const rawResults = await this.tripRepo.manager
@@ -176,7 +167,7 @@ export class TripRepository implements ITripRepository {
       .groupBy('t."vendorId"')
       .getRawMany();
 
-    const stats: Record<string, { rating: number; count: number }> = {};
+    const stats: Record<string, { rating: number, count: number }> = {};
     for (const row of rawResults) {
       stats[row.vendorId] = {
         rating: parseFloat(row.avgRating) || 0,

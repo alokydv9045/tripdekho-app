@@ -39,10 +39,7 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
     private readonly rewardsService: RewardsService,
     private readonly configService: ConfigService,
   ) {
-    if (
-      this.configService.get<string>('RAZORPAY_KEY_ID') &&
-      this.configService.get<string>('RAZORPAY_KEY_SECRET')
-    ) {
+    if (this.configService.get<string>('RAZORPAY_KEY_ID') && this.configService.get<string>('RAZORPAY_KEY_SECRET')) {
       this.razorpay = new Razorpay({
         key_id: this.configService.get<string>('RAZORPAY_KEY_ID'),
         key_secret: this.configService.get<string>('RAZORPAY_KEY_SECRET'),
@@ -70,15 +67,8 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
       throw new NotFoundException('Departure date not found for this trip');
     }
 
-    console.log('SEAT CHECK:', {
-      available: departure.availableSeats,
-      guests: createBookingDto.numberOfGuests,
-      availableType: typeof departure.availableSeats,
-      guestsType: typeof createBookingDto.numberOfGuests,
-    });
-    if (
-      Number(departure.availableSeats) < Number(createBookingDto.numberOfGuests)
-    ) {
+    console.log('SEAT CHECK:', { available: departure.availableSeats, guests: createBookingDto.numberOfGuests, availableType: typeof departure.availableSeats, guestsType: typeof createBookingDto.numberOfGuests });
+    if (Number(departure.availableSeats) < Number(createBookingDto.numberOfGuests)) {
       throw new BadRequestException('Not enough seats available');
     }
 
@@ -86,12 +76,9 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
     const basePrice = departure.price * createBookingDto.numberOfGuests;
     const platformFee = 0; // We can extract this to a service later
     const serviceFee = 0;
-
+    
     const taxRate = this.configService.get<number>('TAX_RATE', 0.05);
-    const platformCommissionRate = this.configService.get<number>(
-      'PLATFORM_COMMISSION_RATE',
-      0.1,
-    );
+    const platformCommissionRate = this.configService.get<number>('PLATFORM_COMMISSION_RATE', 0.1);
 
     const taxes = basePrice * taxRate;
     let discount = 0;
@@ -102,10 +89,7 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
       discount = pointsToRedeem;
     }
 
-    const totalPrice = Math.max(
-      0,
-      basePrice + platformFee + serviceFee + taxes - discount,
-    );
+    const totalPrice = Math.max(0, basePrice + platformFee + serviceFee + taxes - discount);
     const vendorAmount = basePrice * (1 - platformCommissionRate);
 
     // If points are being redeemed, deduct them now before finalizing
@@ -115,7 +99,7 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
         userId,
         pointsToRedeem,
         TransactionSource.REDEMPTION,
-        `Redeemed for booking of ${trip.title}`,
+        `Redeemed for booking of ${trip.title}`
       );
     }
 
@@ -127,10 +111,7 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
     let razorpayOrderId = null;
 
     // Call Razorpay API for real order ID
-    if (
-      this.configService.get<string>('MOCK_PAYMENT') === 'true' ||
-      this.configService.get<string>('RAZORPAY_KEY_ID')?.includes('your_key')
-    ) {
+    if (this.configService.get<string>('MOCK_PAYMENT') === 'true' || this.configService.get<string>('RAZORPAY_KEY_ID')?.includes('your_key')) {
       razorpayOrderId = `mock_order_${crypto.randomBytes(8).toString('hex')}`;
     } else if (this.razorpay) {
       try {
@@ -141,8 +122,7 @@ export class CreateBookingHandler implements ICommandHandler<CreateBookingComman
         });
         razorpayOrderId = order.id;
       } catch (err: any) {
-        const errorMessage =
-          err?.error?.description || err?.message || JSON.stringify(err);
+        const errorMessage = err?.error?.description || err?.message || JSON.stringify(err);
         throw new InternalServerErrorException(
           `Razorpay Order Creation Failed: ${errorMessage}`,
         );

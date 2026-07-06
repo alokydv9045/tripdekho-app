@@ -1,11 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsEnum, IsNumber } from 'class-validator';
 import { PositionType } from '../../entities/career-position.entity';
 import { ApplicationStatus } from '../../entities/career-application.entity';
 

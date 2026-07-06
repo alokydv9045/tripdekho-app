@@ -12,17 +12,17 @@ import {
 } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 import { CmsService } from '../services/cms.service';
-import {
-  CreateVibeVideoDto,
-  UpdateVibeVideoDto,
-  ReorderVibeVideosDto,
-  CreateVlogDto,
-  UpdateVlogDto,
-  CreateBlogDto,
-  UpdateBlogDto,
-  CreateDestinationDto,
-  UpdateDestinationDto,
-  UpdateGlobalSettingsDto,
+import { 
+  CreateVibeVideoDto, 
+  UpdateVibeVideoDto, 
+  ReorderVibeVideosDto, 
+  CreateVlogDto, 
+  UpdateVlogDto, 
+  CreateBlogDto, 
+  UpdateBlogDto, 
+  CreateDestinationDto, 
+  UpdateDestinationDto, 
+  UpdateGlobalSettingsDto 
 } from '../dto/cms.dto';
 
 @Controller('cms')
@@ -241,18 +241,7 @@ export class CmsController {
   @Public()
   @Get('vlogs/categories')
   async getVlogCategories() {
-    return {
-      success: true,
-      data: [
-        'Adventure',
-        'Culture',
-        'Relaxation',
-        'Nature',
-        'Spiritual',
-        'Beach',
-        'Mountain',
-      ],
-    };
+    return { success: true, data: ['Adventure', 'Culture', 'Relaxation', 'Nature', 'Spiritual', 'Beach', 'Mountain'] };
   }
 
   // --- Vibe Videos Write Operations (DB-backed) ---
@@ -272,17 +261,16 @@ export class CmsController {
   }
 
   @Put('vibe-videos/reorder')
-  async reorderVibeVideos(@Body() body: ReorderVibeVideosDto) {
+  async reorderVibeVideos(
+    @Body() body: ReorderVibeVideosDto,
+  ) {
     const data = await this.cmsService.reorderVlogs(body.orders);
     return { success: true, data };
   }
 
   @Put('vibe-videos/:id')
-  async updateVibeVideo(
-    @Param('id') id: string,
-    @Body() body: UpdateVibeVideoDto,
-  ) {
-    const data = await this.cmsService.updateVlog(id, body);
+  async updateVibeVideo(@Param('id') id: string, @Body() body: UpdateVibeVideoDto) {
+    const data = await this.cmsService.updateVlog(id, body as any);
     return { success: true, data };
   }
 
@@ -346,10 +334,7 @@ export class CmsController {
   }
 
   @Put('destinations/:id')
-  async updateDestination(
-    @Param('id') id: string,
-    @Body() body: UpdateDestinationDto,
-  ) {
+  async updateDestination(@Param('id') id: string, @Body() body: UpdateDestinationDto) {
     return { success: true, data: { id, ...body } };
   }
 

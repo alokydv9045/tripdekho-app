@@ -25,10 +25,8 @@ export class AuditInterceptor implements NestInterceptor {
             // Scrub sensitive data from body
             const sanitizedBody = { ...body };
             if (sanitizedBody.password) sanitizedBody.password = '[REDACTED]';
-            if (sanitizedBody.oldPassword)
-              sanitizedBody.oldPassword = '[REDACTED]';
-            if (sanitizedBody.newPassword)
-              sanitizedBody.newPassword = '[REDACTED]';
+            if (sanitizedBody.oldPassword) sanitizedBody.oldPassword = '[REDACTED]';
+            if (sanitizedBody.newPassword) sanitizedBody.newPassword = '[REDACTED]';
             if (sanitizedBody.token) sanitizedBody.token = '[REDACTED]';
 
             const auditRepo = this.dataSource.getRepository(AuditLogEntity);
@@ -38,7 +36,7 @@ export class AuditInterceptor implements NestInterceptor {
               details: JSON.stringify({ body: sanitizedBody }),
               ipAddress: ip,
               moduleName: context.getClass().name,
-              user: user ? { id: user.id } : undefined,
+              user: user ? ({ id: user.id } as any) : undefined,
             });
 
             await auditRepo.save(auditLog);

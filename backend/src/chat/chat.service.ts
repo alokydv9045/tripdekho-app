@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConversationEntity } from '../entities/conversation.entity';
@@ -24,8 +20,7 @@ export class ChatService {
   ) {}
 
   async getConversations(userId: string, role: string) {
-    const query = this.conversationRepo
-      .createQueryBuilder('conversation')
+    const query = this.conversationRepo.createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.customer', 'customer')
       .leftJoinAndSelect('conversation.vendor', 'vendor')
       .leftJoinAndSelect('vendor.user', 'vendorUser')
@@ -36,9 +31,7 @@ export class ChatService {
       .addOrderBy('messages.createdAt', 'DESC');
 
     if (role === 'vendor') {
-      const vendor = await this.vendorRepo.findOne({
-        where: { user: { id: userId } },
-      });
+      const vendor = await this.vendorRepo.findOne({ where: { user: { id: userId } } });
       if (!vendor) return [];
       query.where('conversation.vendorId = :vendorId', { vendorId: vendor.id });
     } else {
@@ -48,33 +41,19 @@ export class ChatService {
     const conversations = await query.getMany();
     // Sort conversations by latest message or creation date
     conversations.sort((a, b) => {
-      const dateA =
-        a.messages?.length > 0
-          ? a.messages[0].createdAt.getTime()
-          : a.createdAt.getTime();
-      const dateB =
-        b.messages?.length > 0
-          ? b.messages[0].createdAt.getTime()
-          : b.createdAt.getTime();
+      const dateA = a.messages?.length > 0 ? a.messages[0].createdAt.getTime() : a.createdAt.getTime();
+      const dateB = b.messages?.length > 0 ? b.messages[0].createdAt.getTime() : b.createdAt.getTime();
       return dateB - dateA;
     });
 
     return conversations;
   }
 
-  async createConversation(
-    customerId: string,
-    vendorIdentifier: string,
-    tripId?: string,
-  ) {
+  async createConversation(customerId: string, vendorIdentifier: string, tripId?: string) {
     // vendorIdentifier could be a vendor.id or a vendor.user.id
-    let vendor = await this.vendorRepo.findOne({
-      where: { id: vendorIdentifier },
-    });
+    let vendor = await this.vendorRepo.findOne({ where: { id: vendorIdentifier } });
     if (!vendor) {
-      vendor = await this.vendorRepo.findOne({
-        where: { user: { id: vendorIdentifier } },
-      });
+      vendor = await this.vendorRepo.findOne({ where: { user: { id: vendorIdentifier } } });
     }
     if (!vendor) throw new Error('Vendor not found');
 
@@ -83,19 +62,14 @@ export class ChatService {
       customer: { id: customerId },
       vendor: { id: vendor.id },
     };
-
+    
     if (tripId) {
       query['trip'] = { id: tripId };
     }
 
     let conversation = await this.conversationRepo.findOne({
       where: query,
-      relations: {
-        customer: true,
-        vendor: { user: true },
-        trip: true,
-        messages: { sender: true },
-      },
+      relations: { customer: true, vendor: { user: true }, trip: true, messages: { sender: true } },
     });
 
     if (!conversation) {
@@ -107,12 +81,7 @@ export class ChatService {
       await this.conversationRepo.save(conversation);
       conversation = await this.conversationRepo.findOne({
         where: { id: conversation.id },
-        relations: {
-          customer: true,
-          vendor: { user: true },
-          trip: true,
-          messages: { sender: true },
-        },
+        relations: { customer: true, vendor: { user: true }, trip: true, messages: { sender: true } },
       });
     }
 
@@ -122,17 +91,12 @@ export class ChatService {
   async getConversationById(id: string, userId: string) {
     const conversation = await this.conversationRepo.findOne({
       where: { id },
-      relations: {
-        customer: true,
-        vendor: { user: true },
-        trip: true,
-        messages: { sender: true },
-      },
+      relations: { customer: true, vendor: { user: true }, trip: true, messages: { sender: true } },
       order: {
         messages: {
-          createdAt: 'ASC',
-        },
-      },
+          createdAt: 'ASC'
+        }
+      }
     });
 
     if (!conversation) throw new NotFoundException('Conversation not found');
@@ -149,10 +113,7 @@ export class ChatService {
   }
 
   async sendMessage(conversationId: string, senderId: string, content: string) {
-    const conversation = await this.getConversationById(
-      conversationId,
-      senderId,
-    );
+    const conversation = await this.getConversationById(conversationId, senderId);
 
     const message = this.messageRepo.create({
       conversation: { id: conversationId },
@@ -170,15 +131,14 @@ export class ChatService {
 
   async markAsRead(conversationId: string, userId: string) {
     const conversation = await this.getConversationById(conversationId, userId);
-
-    await this.messageRepo
-      .createQueryBuilder()
+    
+    await this.messageRepo.createQueryBuilder()
       .update(MessageEntity)
       .set({ isRead: true })
-      .where('conversationId = :conversationId', { conversationId })
-      .andWhere('senderId != :userId', { userId })
+      .where("conversationId = :conversationId", { conversationId })
+      .andWhere("senderId != :userId", { userId })
       .execute();
-
+      
     return { success: true };
   }
 }

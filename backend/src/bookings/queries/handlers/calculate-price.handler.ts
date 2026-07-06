@@ -28,12 +28,8 @@ export class CalculatePriceHandler implements IQueryHandler<CalculatePriceQuery>
       throw new NotFoundException('Departure date not found for this trip');
     }
 
-    const settings = await this.globalSettingRepo.findOne({
-      where: { configName: 'default' },
-    });
-    const platformFee = Number(
-      settings?.commissionRates?.platformFeeAmount || 0,
-    );
+    const settings = await this.globalSettingRepo.findOne({ where: { configName: 'default' } });
+    const platformFee = Number(settings?.commissionRates?.platformFeeAmount || 0);
 
     const basePrice = departure.price * query.numberOfGuests;
     const serviceFee = 0;
@@ -49,10 +45,7 @@ export class CalculatePriceHandler implements IQueryHandler<CalculatePriceQuery>
       discount = query.pointsToRedeem;
     }
 
-    const totalPrice = Math.max(
-      0,
-      basePrice + platformFee + serviceFee + taxes - discount,
-    );
+    const totalPrice = Math.max(0, basePrice + platformFee + serviceFee + taxes - discount);
 
     return {
       basePrice,

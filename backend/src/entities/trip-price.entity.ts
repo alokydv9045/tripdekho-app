@@ -30,11 +30,7 @@ export class TripPriceEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   originalPrice: number;
 
-  @Column({
-    type: 'simple-enum',
-    enum: PriceType,
-    default: PriceType.PER_PERSON,
-  })
+  @Column({ type: 'simple-enum', enum: PriceType, default: PriceType.PER_PERSON })
   priceType: PriceType;
 
   @Column({ type: 'simple-json', nullable: true })

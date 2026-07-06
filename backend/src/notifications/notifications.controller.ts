@@ -34,17 +34,17 @@ export class NotificationsController {
   async testWhatsApp(@Body() body: { phone: string; message: string }) {
     this.logger.log(`Testing Meta WhatsApp to ${body.phone}`);
     await this.notificationService.sendMetaWhatsApp(body.phone, body.message);
-    return {
-      success: true,
-      message: 'Test message triggered. Check server logs for details.',
-    };
+    return { success: true, message: 'Test message triggered. Check server logs for details.' };
   }
 
   @Get()
   async getNotifications(@CurrentUser('id') userId: string) {
     this.logger.log('Fetching all notifications');
     const notifications = await this.notificationRepo.find({
-      where: [{ userId }, { userId: IsNull() }],
+      where: [
+        { userId },
+        { userId: IsNull() },
+      ],
       order: { createdAt: 'DESC' },
       take: 20,
     });
@@ -111,7 +111,7 @@ export class NotificationsController {
     );
 
     const isPasswordSent = !!data.generatedPassword;
-
+    
     // Attempt to actually send the Email and WhatsApp using our integrated services
     if (data.email) {
       await this.notificationService.sendVendorWelcomeEmail({
@@ -122,14 +122,11 @@ export class NotificationsController {
     }
 
     if (data.phone) {
-      await this.notificationService.sendVendorWelcomeWhatsApp(
-        data.phone,
-        data.name,
-      );
+      await this.notificationService.sendVendorWelcomeWhatsApp(data.phone, data.name);
       if (data.generatedPassword) {
         await this.notificationService.sendWhatsApp(
-          data.phone,
-          `Your TripDekho temporary password code is *${data.generatedPassword}*`,
+          data.phone, 
+          `Your TripDekho temporary password code is *${data.generatedPassword}*`
         );
       }
     }

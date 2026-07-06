@@ -82,7 +82,7 @@ export class VendorsController {
         .orderBy('review.created_at', 'DESC');
 
       reviews = await reviewQuery.take(10).getMany();
-
+      
       const ratingResult = await this.vendorRepo.manager
         .createQueryBuilder(ReviewEntity, 'review')
         .where('review.trip_id IN (:...tripIds)', { tripIds })
@@ -283,10 +283,7 @@ export class VendorsController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Only image files are allowed'),
-            false,
-          );
+          return cb(new BadRequestException('Only image files are allowed'), false);
         }
         cb(null, true);
       },
@@ -297,9 +294,7 @@ export class VendorsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException(
-        'No logo file provided. Send a file with field name "logo".',
-      );
+      throw new BadRequestException('No logo file provided. Send a file with field name "logo".');
     }
 
     const vendor = await this.vendorRepo.findOne({ where: { id } });
@@ -343,10 +338,7 @@ export class VendorsController {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Only image files are allowed'),
-            false,
-          );
+          return cb(new BadRequestException('Only image files are allowed'), false);
         }
         cb(null, true);
       },
@@ -357,9 +349,7 @@ export class VendorsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException(
-        'No banner file provided. Send a file with field name "banner".',
-      );
+      throw new BadRequestException('No banner file provided. Send a file with field name "banner".');
     }
 
     const vendor = await this.vendorRepo.findOne({ where: { id } });
@@ -418,8 +408,7 @@ export class VendorsController {
       // In a real scenario, you'd pass vendor details here
       const account = await instance.accounts.create({
         type: 'route',
-        email:
-          vendor.contactEmail || vendor.user?.email || 'vendor@example.com',
+        email: vendor.contactEmail || vendor.user?.email || 'vendor@example.com',
         business_name: vendor.businessName || 'TripDekho Vendor',
         reference_id: id,
         legal_business_name: vendor.businessName || 'TripDekho Vendor',
@@ -452,7 +441,7 @@ export class VendorsController {
         message: 'Razorpay keys not configured. Simulating onboarding link.',
       };
     }
-
+    
     // In production, generate actual link using Razorpay API
     // e.g., instance.onboarding.createAccountLink({ account_id: vendor.razorpayAccountId })
     const vendor = await this.vendorRepo.findOne({ where: { id } });
@@ -461,7 +450,7 @@ export class VendorsController {
       vendor.razorpayLinkedAccountStatus = 'active';
       await this.vendorRepo.save(vendor);
     }
-
+    
     return {
       success: true,
       data: { url: 'https://dashboard.razorpay.com/onboarding' },
@@ -488,14 +477,8 @@ export class VendorsController {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_req, file, cb) => {
-        if (
-          !file.mimetype.startsWith('image/') &&
-          file.mimetype !== 'application/pdf'
-        ) {
-          return cb(
-            new BadRequestException('Only image and PDF files are allowed'),
-            false,
-          );
+        if (!file.mimetype.startsWith('image/') && file.mimetype !== 'application/pdf') {
+          return cb(new BadRequestException('Only image and PDF files are allowed'), false);
         }
         cb(null, true);
       },
@@ -506,22 +489,11 @@ export class VendorsController {
     @Param('docType') docType: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const validDocTypes = [
-      'panCard',
-      'aadharFront',
-      'aadharBack',
-      'gstCertificate',
-      'businessRegistration',
-    ];
+    const validDocTypes = ['panCard', 'aadharFront', 'aadharBack', 'gstCertificate', 'businessRegistration'];
     if (!validDocTypes.includes(docType)) {
-      throw new BadRequestException(
-        'Invalid document type. Must be one of: ' + validDocTypes.join(', '),
-      );
+      throw new BadRequestException('Invalid document type. Must be one of: ' + validDocTypes.join(', '));
     }
-    if (!file)
-      throw new BadRequestException(
-        'No file provided. Send file with field name "file".',
-      );
+    if (!file) throw new BadRequestException('No file provided. Send file with field name "file".');
 
     const vendor = await this.vendorRepo.findOne({ where: { id } });
     if (!vendor) throw new NotFoundException('Vendor not found');
@@ -529,9 +501,7 @@ export class VendorsController {
     const existingDocs = vendor.kycDocuments || {};
     const existingDoc = (existingDocs as any)[docType];
     if (existingDoc?.publicId) {
-      await this.storageService
-        .deleteImage(existingDoc.publicId)
-        .catch(() => null);
+      await this.storageService.deleteImage(existingDoc.publicId).catch(() => null);
     }
 
     const result = await this.storageService.uploadImage(file, {
@@ -544,7 +514,7 @@ export class VendorsController {
       [docType]: { url: result.secureUrl, publicId: result.publicId },
     };
     await this.vendorRepo.update(id, {
-      kycDocuments: updatedDocs,
+      kycDocuments: updatedDocs as any,
       kycStatus: 'submitted',
     });
 

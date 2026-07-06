@@ -19,11 +19,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import {
-  VerifyPaymentDto,
-  CalculatePriceDto,
-  SendMessageDto,
-} from './dto/bookings.dto';
+import { VerifyPaymentDto, CalculatePriceDto, SendMessageDto } from './dto/bookings.dto';
 import { CreateBookingCommand } from './commands/create-booking.command';
 import { CalculatePriceQuery } from './queries/calculate-price.query';
 import { ConfirmPaymentCommand } from './commands/confirm-payment.command';
@@ -82,16 +78,12 @@ export class BookingsController {
     const limit = Number(query.limit) || 10;
     const [bookings, total] = await this.bookingRepo.findAndCount({
       where: { user: { id: userId } },
-      relations: {
-        trip: { location: true, vendor: { user: true } },
-        departure: true,
-        vendor: { user: true },
-      },
+      relations: { trip: { location: true, vendor: { user: true } }, departure: true, vendor: { user: true } },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
-
+    
     // Lazy Evaluation: Automatically mark past confirmed bookings as completed
     let needsSave = false;
     const now = new Date();
@@ -103,11 +95,9 @@ export class BookingsController {
         }
       }
     }
-
+    
     if (needsSave) {
-      await this.bookingRepo.save(
-        bookings.filter((b) => b.status === 'completed'),
-      );
+      await this.bookingRepo.save(bookings.filter(b => b.status === 'completed'));
     }
 
     return {
@@ -133,10 +123,10 @@ export class BookingsController {
     if (booking.vendor) {
       const trips = await this.bookingRepo.manager.find(TripEntity, {
         where: { vendor: { id: booking.vendor.id } },
-        select: { id: true },
+        select: { id: true }
       });
-      const tripIds = trips.map((t) => t.id);
-
+      const tripIds = trips.map(t => t.id);
+      
       if (tripIds.length > 0) {
         const ratingResult = await this.bookingRepo.manager
           .createQueryBuilder(ReviewEntity, 'review')
@@ -215,7 +205,10 @@ export class BookingsController {
   }
 
   @Get(':id/invoice')
-  downloadInvoice(@CurrentUser('id') _userId: string, @Param('id') id: string) {
+  downloadInvoice(
+    @CurrentUser('id') _userId: string,
+    @Param('id') id: string,
+  ) {
     const invoiceUrl = `/api/v2/bookings/${id}/receipt-pdf`;
     return {
       success: true,
@@ -229,12 +222,7 @@ export class BookingsController {
   async getReceiptPdf(@Param('id') id: string, @Res() res: ExpressResponse) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
-      relations: {
-        trip: true,
-        vendor: { user: true },
-        user: true,
-        departure: true,
-      },
+      relations: { trip: true, vendor: { user: true }, user: true, departure: true },
     });
 
     if (!booking) {
@@ -305,16 +293,12 @@ export class BookingsController {
               <td colspan="2" style="text-align: right; color: #666;">Platform Fee</td>
               <td>₹${Number(booking.platformFee).toLocaleString('en-IN')}</td>
             </tr>
-            ${
-              booking.discount
-                ? `
+            ${booking.discount ? `
             <tr>
               <td colspan="2" style="text-align: right; color: #d97706;">Discount Applied</td>
               <td style="color: #d97706;">-₹${Number(booking.discount).toLocaleString('en-IN')}</td>
             </tr>
-            `
-                : ''
-            }
+            ` : ''}
             <tr>
               <td colspan="2" style="text-align: right;" class="total">Total Paid</td>
               <td class="total">₹${Number(booking.totalPrice).toLocaleString('en-IN')}</td>
@@ -334,10 +318,7 @@ export class BookingsController {
       </html>
     `;
     res.setHeader('Content-Type', 'text/html');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="Invoice_${booking.bookingNumber}.html"`,
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="Invoice_${booking.bookingNumber}.html"`);
     return res.send(html);
   }
 

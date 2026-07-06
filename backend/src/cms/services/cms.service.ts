@@ -20,118 +20,31 @@ export class CmsService {
     let settings = await this.settingsRepo.findOne({
       where: { configName: 'default' },
     });
-
+    
     const defaultPermissions = {
-      '/admin/dashboard': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'finance_admin',
-        'growth_admin',
-        'support_admin',
-        'operations_admin',
-        'onboarding_admin',
-        'content_admin',
-      ],
-      '/admin/system': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'content_admin',
-      ],
-      '/admin/users': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'growth_admin',
-        'support_admin',
-      ],
-      '/admin/vendors': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'onboarding_admin',
-        'operations_admin',
-        'support_admin',
-      ],
-      '/admin/trips': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'operations_admin',
-        'content_admin',
-      ],
-      '/admin/bookings': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'finance_admin',
-        'operations_admin',
-        'support_admin',
-      ],
+      '/admin/dashboard': ['super_admin', 'tech_admin', 'platform_admin', 'finance_admin', 'growth_admin', 'support_admin', 'operations_admin', 'onboarding_admin', 'content_admin'],
+      '/admin/system': ['super_admin', 'tech_admin', 'platform_admin', 'content_admin'],
+      '/admin/users': ['super_admin', 'tech_admin', 'platform_admin', 'growth_admin', 'support_admin'],
+      '/admin/vendors': ['super_admin', 'tech_admin', 'platform_admin', 'onboarding_admin', 'operations_admin', 'support_admin'],
+      '/admin/trips': ['super_admin', 'tech_admin', 'platform_admin', 'operations_admin', 'content_admin'],
+      '/admin/bookings': ['super_admin', 'tech_admin', 'platform_admin', 'finance_admin', 'operations_admin', 'support_admin'],
       '/admin/finance': ['super_admin', 'tech_admin', 'finance_admin'],
-      '/admin/messaging': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'growth_admin',
-        'support_admin',
-      ],
-      '/admin/content': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'content_admin',
-        'growth_admin',
-      ],
-      '/admin/profile': [
-        'super_admin',
-        'tech_admin',
-        'platform_admin',
-        'finance_admin',
-        'growth_admin',
-        'support_admin',
-        'operations_admin',
-        'onboarding_admin',
-        'content_admin',
-      ],
+      '/admin/messaging': ['super_admin', 'tech_admin', 'platform_admin', 'growth_admin', 'support_admin'],
+      '/admin/content': ['super_admin', 'tech_admin', 'platform_admin', 'content_admin', 'growth_admin'],
+      '/admin/profile': ['super_admin', 'tech_admin', 'platform_admin', 'finance_admin', 'growth_admin', 'support_admin', 'operations_admin', 'onboarding_admin', 'content_admin']
     };
 
     const defaultCreatorSpotlight = [
-      {
-        name: 'Arjun Mehta',
-        handle: '@mountainarjun',
-        specialty: 'High Altitude Treks',
-        trips: 48,
-        subs: '240K',
-        avatar: 'A',
-        cover: 'from-blue-900 to-indigo-950',
-      },
-      {
-        name: 'Priya Coastal',
-        handle: '@priyacoastal',
-        specialty: 'Beach & Island Life',
-        trips: 62,
-        subs: '380K',
-        avatar: 'P',
-        cover: 'from-teal-900 to-cyan-950',
-      },
-      {
-        name: 'Raj Explorer',
-        handle: '@rajexplores',
-        specialty: 'Heritage & Culture',
-        trips: 35,
-        subs: '165K',
-        avatar: 'R',
-        cover: 'from-amber-900 to-orange-950',
-      },
+      { name: "Arjun Mehta", handle: "@mountainarjun", specialty: "High Altitude Treks", trips: 48, subs: "240K", avatar: "A", cover: "from-blue-900 to-indigo-950" },
+      { name: "Priya Coastal", handle: "@priyacoastal", specialty: "Beach & Island Life", trips: 62, subs: "380K", avatar: "P", cover: "from-teal-900 to-cyan-950" },
+      { name: "Raj Explorer", handle: "@rajexplores", specialty: "Heritage & Culture", trips: 35, subs: "165K", avatar: "R", cover: "from-amber-900 to-orange-950" }
     ];
 
     if (!settings) {
-      settings = this.settingsRepo.create({
+      settings = this.settingsRepo.create({ 
         configName: 'default',
         adminModulePermissions: defaultPermissions,
-        creatorSpotlight: defaultCreatorSpotlight,
+        creatorSpotlight: defaultCreatorSpotlight
       });
       await this.settingsRepo.save(settings);
     } else {
@@ -142,7 +55,7 @@ export class CmsService {
       }
       await this.settingsRepo.save(settings);
     }
-
+    
     return settings;
   }
 
@@ -156,9 +69,7 @@ export class CmsService {
   // Vlog Methods (DB-backed)
   // ============================
   async getVlogs(grouped?: boolean) {
-    const vlogs = await this.vlogRepo.find({
-      order: { order: 'ASC', createdAt: 'DESC' },
-    });
+    const vlogs = await this.vlogRepo.find({ order: { order: 'ASC', createdAt: 'DESC' } });
     if (grouped) {
       const groupedData: Record<string, VlogEntity[]> = {};
       for (const vlog of vlogs) {

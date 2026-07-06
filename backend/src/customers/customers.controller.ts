@@ -16,10 +16,7 @@ import { CustomersService } from './customers.service';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import {
-  UpdateCustomerProfileDto,
-  DeleteAccountDto,
-} from './dto/customers.dto';
+import { UpdateCustomerProfileDto, DeleteAccountDto } from './dto/customers.dto';
 
 @Controller('customers')
 @UseGuards(AuthGuard('jwt'))
@@ -32,10 +29,7 @@ export class CustomersController {
   }
 
   @Put('profile')
-  async updateProfile(
-    @Request() req: any,
-    @Body() body: UpdateCustomerProfileDto,
-  ) {
+  async updateProfile(@Request() req: any, @Body() body: UpdateCustomerProfileDto) {
     return this.customersService.updateProfile(req.user.id, body);
   }
 
@@ -50,10 +44,7 @@ export class CustomersController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Only image files are allowed'),
-            false,
-          );
+          return cb(new BadRequestException('Only image files are allowed'), false);
         }
         cb(null, true);
       },
@@ -64,9 +55,7 @@ export class CustomersController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException(
-        'No image file provided. Send a file with field name "picture".',
-      );
+      throw new BadRequestException('No image file provided. Send a file with field name "picture".');
     }
 
     const user = await this.customersService.updateAvatar(req.user.id, file);

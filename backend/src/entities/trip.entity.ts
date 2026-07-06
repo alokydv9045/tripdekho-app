@@ -153,10 +153,7 @@ export class TripEntity {
   @OneToOne(() => TripPriceEntity, (price) => price.trip, { cascade: true })
   price: TripPriceEntity;
 
-  @OneToMany(() => TripDateEntity, (date) => date.trip, {
-    cascade: true,
-    orphanedRowAction: 'delete',
-  })
+  @OneToMany(() => TripDateEntity, (date) => date.trip, { cascade: true, orphanedRowAction: 'delete' })
   dates: TripDateEntity[];
 
   @OneToMany(() => TripItineraryEntity, (itinerary) => itinerary.trip, {
@@ -165,10 +162,7 @@ export class TripEntity {
   })
   itinerary: TripItineraryEntity[];
 
-  @OneToMany(() => TripMediaEntity, (media) => media.trip, {
-    cascade: true,
-    orphanedRowAction: 'delete',
-  })
+  @OneToMany(() => TripMediaEntity, (media) => media.trip, { cascade: true, orphanedRowAction: 'delete' })
   media: TripMediaEntity[];
 
   @Column({ default: false })

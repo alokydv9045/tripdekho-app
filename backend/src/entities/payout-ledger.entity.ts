@@ -77,18 +77,10 @@ export class PayoutLedgerEntity {
   @Column({ default: 'INR' })
   currency: string;
 
-  @Column({
-    type: 'simple-enum',
-    enum: LedgerStatus,
-    default: LedgerStatus.PENDING,
-  })
+  @Column({ type: 'simple-enum', enum: LedgerStatus, default: LedgerStatus.PENDING })
   status: LedgerStatus;
 
-  @Column({
-    type: 'simple-enum',
-    enum: EscrowStatus,
-    default: EscrowStatus.HELD,
-  })
+  @Column({ type: 'simple-enum', enum: EscrowStatus, default: EscrowStatus.HELD })
   escrowStatus: EscrowStatus;
 
   @Column({ nullable: true })

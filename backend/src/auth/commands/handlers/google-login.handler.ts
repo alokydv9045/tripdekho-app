@@ -74,11 +74,7 @@ export class GoogleLoginHandler implements ICommandHandler<GoogleLoginCommand> {
       );
 
       // Remove sensitive fields before returning
-      const {
-        passwordHash: _ph,
-        mfaSecret: _mfa,
-        ...safeUser
-      } = user as UserEntity & { passwordHash: string; mfaSecret: string };
+      const { passwordHash: _ph, mfaSecret: _mfa, ...safeUser } = user as UserEntity & { passwordHash: string; mfaSecret: string };
 
       return {
         success: true,

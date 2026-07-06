@@ -131,11 +131,7 @@ export class BookingEntity {
   @Column({ nullable: true })
   razorpayPaymentId: string;
 
-  @Column({
-    type: 'simple-enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
-  })
+  @Column({ type: 'simple-enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
   paymentStatus: PaymentStatus;
 
   @Column({
@@ -145,11 +141,7 @@ export class BookingEntity {
   })
   paymentMethod: PaymentMethod;
 
-  @Column({
-    type: 'simple-enum',
-    enum: BookingStatus,
-    default: BookingStatus.PENDING,
-  })
+  @Column({ type: 'simple-enum', enum: BookingStatus, default: BookingStatus.PENDING })
   status: BookingStatus;
 
   @Column({ nullable: true })
@@ -158,11 +150,7 @@ export class BookingEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   refundAmount: number;
 
-  @Column({
-    type: 'simple-enum',
-    enum: RefundStatus,
-    default: RefundStatus.NONE,
-  })
+  @Column({ type: 'simple-enum', enum: RefundStatus, default: RefundStatus.NONE })
   refundStatus: RefundStatus;
 
   @Column({ type: 'text', nullable: true })

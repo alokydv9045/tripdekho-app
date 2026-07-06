@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Query,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -49,35 +41,21 @@ export class ReviewsController {
     if (!trip) throw new BadRequestException('Trip not found');
 
     let booking: BookingEntity | null = null;
-
+    
     if (body.bookingId) {
       booking = await this.bookingRepo.findOne({
-        where: {
-          id: body.bookingId,
-          user: { id: userId },
-          trip: { id: trip.id },
-        },
+        where: { id: body.bookingId, user: { id: userId }, trip: { id: trip.id } },
       });
     } else {
       // Find any completed, unreviewed booking for this user and trip
       booking = await this.bookingRepo.findOne({
-        where: {
-          user: { id: userId },
-          trip: { id: trip.id },
-          status: 'completed' as any,
-          reviewed: false,
-        },
+        where: { user: { id: userId }, trip: { id: trip.id }, status: 'completed' as any, reviewed: false },
       });
     }
 
-    if (!booking)
-      throw new BadRequestException(
-        'No eligible completed booking found for this trip',
-      );
-    if (booking.status !== 'completed')
-      throw new BadRequestException('You can only review completed trips');
-    if (booking.reviewed)
-      throw new BadRequestException('You have already reviewed this booking');
+    if (!booking) throw new BadRequestException('No eligible completed booking found for this trip');
+    if (booking.status !== 'completed') throw new BadRequestException('You can only review completed trips');
+    if (booking.reviewed) throw new BadRequestException('You have already reviewed this booking');
 
     const review = this.reviewRepo.create({
       rating: body.rating,

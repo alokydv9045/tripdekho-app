@@ -32,11 +32,7 @@ class TripPriceDto {
   @IsString() @IsOptional() currency?: string;
   @IsNumber() @IsOptional() originalPrice?: number;
   @IsEnum(PriceType) @IsOptional() priceType?: PriceType;
-  @IsArray() @IsOptional() occupancyOptions?: Array<{
-    type: string;
-    price: number;
-    originalPrice?: number;
-  }>;
+  @IsArray() @IsOptional() occupancyOptions?: Array<{ type: string; price: number; originalPrice?: number }>;
 }
 
 class TripDateDto {
@@ -83,10 +79,7 @@ export class CreateTripDto {
 
   @IsString() @IsOptional() importantNote?: string;
   @IsArray() @IsOptional() @IsString({ each: true }) pickupLocations?: string[];
-  @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
-  travelingLocations?: string[];
+  @IsArray() @IsOptional() @IsString({ each: true }) travelingLocations?: string[];
   @IsOptional() thumbnail?: { url: string };
   @IsOptional() routeMapImage?: { url: string };
   @IsOptional() isCustomizable?: boolean;

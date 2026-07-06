@@ -33,7 +33,9 @@ export class PromocodesController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  async validatePromoCodeEndpoint(@Body() body: ApplyPromoCodeDto) {
+  async validatePromoCodeEndpoint(
+    @Body() body: ApplyPromoCodeDto,
+  ) {
     return this.validatePromoCode(body);
   }
 

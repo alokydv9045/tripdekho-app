@@ -42,13 +42,11 @@ export class DatabaseAuditSubscriber implements EntitySubscriberInterface {
     try {
       const auditRepo = event.manager.getRepository(AuditLogEntity);
       const changes: any = {};
-
+      
       // Capture what actually changed
       event.updatedColumns.forEach((col) => {
         changes[col.propertyName] = {
-          from: event.databaseEntity
-            ? event.databaseEntity[col.propertyName]
-            : null,
+          from: event.databaseEntity ? event.databaseEntity[col.propertyName] : null,
           to: event.entity ? event.entity[col.propertyName] : null,
         };
       });
@@ -56,10 +54,7 @@ export class DatabaseAuditSubscriber implements EntitySubscriberInterface {
       const log = auditRepo.create({
         event: `DATABASE_UPDATE: ${event.metadata.tableName}`,
         type: 'database',
-        details: JSON.stringify({
-          entityId: event.entity?.id || event.databaseEntity?.id,
-          changes,
-        }),
+        details: JSON.stringify({ entityId: event.entity?.id || event.databaseEntity?.id, changes }),
         moduleName: 'DatabaseSubscriber',
       });
       await auditRepo.save(log);

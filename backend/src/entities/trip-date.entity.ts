@@ -43,10 +43,6 @@ export class TripDateEntity {
   @Column({ default: 0 })
   bookedSeats: number;
 
-  @Column({
-    type: 'simple-enum',
-    enum: DateStatus,
-    default: DateStatus.AVAILABLE,
-  })
+  @Column({ type: 'simple-enum', enum: DateStatus, default: DateStatus.AVAILABLE })
   status: DateStatus;
 }

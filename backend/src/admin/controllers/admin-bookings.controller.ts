@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Patch, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BookingEntity } from '../../entities/booking.entity';
@@ -18,23 +25,20 @@ export class AdminBookingsController {
   async getBookings(@Query() query: Record<string, unknown>) {
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
-
-    const queryBuilder = this.bookingRepo
-      .createQueryBuilder('booking')
+    
+    const queryBuilder = this.bookingRepo.createQueryBuilder('booking')
       .leftJoinAndSelect('booking.user', 'user')
       .leftJoinAndSelect('booking.trip', 'trip')
       .orderBy('booking.createdAt', 'DESC');
 
     if (query.status && typeof query.status === 'string') {
-      queryBuilder.andWhere('booking.status = :status', {
-        status: query.status,
-      });
+      queryBuilder.andWhere('booking.status = :status', { status: query.status });
     }
 
     if (query.search && typeof query.search === 'string') {
       queryBuilder.andWhere(
         '(user.name ILIKE :search OR user.email ILIKE :search OR booking.bookingNumber ILIKE :search)',
-        { search: `%${query.search}%` },
+        { search: `%${query.search}%` }
       );
     }
 

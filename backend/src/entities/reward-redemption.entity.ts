@@ -34,11 +34,7 @@ export class RewardRedemptionEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   discountAmount: number;
 
-  @Column({
-    type: 'enum',
-    enum: RedemptionType,
-    default: RedemptionType.DIRECT_DISCOUNT,
-  })
+  @Column({ type: 'enum', enum: RedemptionType, default: RedemptionType.DIRECT_DISCOUNT })
   type: RedemptionType;
 
   @CreateDateColumn()
