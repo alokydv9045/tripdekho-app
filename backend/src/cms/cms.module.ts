@@ -9,7 +9,9 @@ import { LocationController } from './controllers/location.controller';
 import { CmsService } from './services/cms.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GlobalSettingEntity, VlogEntity, BlogEntity])],
+  imports: [
+    TypeOrmModule.forFeature([GlobalSettingEntity, VlogEntity, BlogEntity]),
+  ],
   controllers: [CmsController, AdminCmsController, LocationController],
   providers: [CmsService],
   exports: [CmsService],

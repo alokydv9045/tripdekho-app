@@ -25,5 +25,7 @@ export interface ITripRepository {
   findBySlug(slug: string): Promise<TripEntity | null>;
   search(params: TripSearchParams): Promise<[TripEntity[], number]>;
   save(trip: TripEntity): Promise<TripEntity>;
-  getVendorStats(vendorIds: string[]): Promise<Record<string, { rating: number, count: number }>>;
+  getVendorStats(
+    vendorIds: string[],
+  ): Promise<Record<string, { rating: number; count: number }>>;
 }

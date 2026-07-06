@@ -21,7 +21,10 @@ export class CareerApplicationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => CareerPositionEntity, (pos) => pos.applications, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => CareerPositionEntity, (pos) => pos.applications, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'position_id' })
   position: CareerPositionEntity;
 
@@ -43,7 +46,11 @@ export class CareerApplicationEntity {
   @Column({ type: 'text', nullable: true })
   coverLetter: string;
 
-  @Column({ type: 'enum', enum: ApplicationStatus, default: ApplicationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: ApplicationStatus,
+    default: ApplicationStatus.PENDING,
+  })
   status: ApplicationStatus;
 
   @CreateDateColumn()

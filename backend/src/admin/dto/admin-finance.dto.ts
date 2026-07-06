@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, IsNotEmpty, Min, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsNotEmpty,
+  Min,
+  MaxLength,
+} from 'class-validator';
 
 export class SettleVendorDto {
   @IsNumber()

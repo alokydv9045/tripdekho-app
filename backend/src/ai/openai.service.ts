@@ -99,7 +99,7 @@ export class OpenAIService {
 
     try {
       const prompt = `Create a whimsical, flat vector infographic map illustration on a pale yellow background. It should trace a path connecting these locations: ${locations.join(', ')}. Use simple nature icons like pine trees and mountains. The overall vibe should be similar to a cute travel map graphic. NO TEXT on the image.`;
-      
+
       const response = await this.openai.images.generate({
         model: 'dall-e-3',
         prompt,
@@ -108,7 +108,7 @@ export class OpenAIService {
       });
 
       if (!response || !response.data || response.data.length === 0) {
-         throw new Error('No image returned from OpenAI');
+        throw new Error('No image returned from OpenAI');
       }
 
       const imageUrl = response.data[0].url;
@@ -134,7 +134,7 @@ export class OpenAIService {
 
       const filePath = path.join(uploadDir, filename);
       const writer = fs.createWriteStream(filePath);
-      
+
       imageResponse.data.pipe(writer);
 
       await new Promise((resolve, reject) => {
@@ -142,7 +142,10 @@ export class OpenAIService {
         writer.on('error', reject);
       });
 
-      const baseUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL')?.replace('/api/v2', '') || 'http://localhost:5001';
+      const baseUrl =
+        this.configService
+          .get<string>('NEXT_PUBLIC_API_URL')
+          ?.replace('/api/v2', '') || 'http://localhost:5001';
       return `${baseUrl}/uploads/${filename}`;
     } catch (e) {
       this.logger.error(`Error generating route map: ${e.message}`);
@@ -150,17 +153,23 @@ export class OpenAIService {
     }
   }
 
-  async generateTripImage(title: string, destination: string, vibe: string): Promise<string> {
+  async generateTripImage(
+    title: string,
+    destination: string,
+    vibe: string,
+  ): Promise<string> {
     this.logger.log(`Generating trip image for ${title}`);
 
     if (!this.openai) {
-      this.logger.warn('OPENAI_API_KEY not configured. Mocking trip image URL.');
+      this.logger.warn(
+        'OPENAI_API_KEY not configured. Mocking trip image URL.',
+      );
       return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800';
     }
 
     try {
       const prompt = `A breathtaking, cinematic, and professional travel photography shot for a trip titled "${title}" located in ${destination}. The overall vibe is ${vibe}. The image should be highly realistic, stunning lighting, no text, no borders. Suitable for a premium travel agency website header.`;
-      
+
       const response = await this.openai.images.generate({
         model: 'dall-e-3',
         prompt,
@@ -169,7 +178,7 @@ export class OpenAIService {
       });
 
       if (!response || !response.data || response.data.length === 0) {
-         throw new Error('No image returned from OpenAI');
+        throw new Error('No image returned from OpenAI');
       }
 
       const imageUrl = response.data[0].url;
@@ -194,7 +203,7 @@ export class OpenAIService {
 
       const filePath = path.join(uploadDir, filename);
       const writer = fs.createWriteStream(filePath);
-      
+
       imageResponse.data.pipe(writer);
 
       await new Promise((resolve, reject) => {
@@ -202,14 +211,20 @@ export class OpenAIService {
         writer.on('error', reject);
       });
 
-      const baseUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL')?.replace('/api/v2', '') || 'http://localhost:5001';
+      const baseUrl =
+        this.configService
+          .get<string>('NEXT_PUBLIC_API_URL')
+          ?.replace('/api/v2', '') || 'http://localhost:5001';
       return `${baseUrl}/uploads/${filename}`;
     } catch (e) {
       this.logger.error(`Error generating trip image: ${e.message}`);
       return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800';
     }
   }
-  async generateTripDetails(title: string, destination?: string): Promise<{
+  async generateTripDetails(
+    title: string,
+    destination?: string,
+  ): Promise<{
     description: string;
     shortDescription: string;
     catchphrase: string;
@@ -223,7 +238,9 @@ export class OpenAIService {
     };
 
     if (!this.openai) {
-      this.logger.warn('OPENAI_API_KEY not configured. Using fallback trip details.');
+      this.logger.warn(
+        'OPENAI_API_KEY not configured. Using fallback trip details.',
+      );
       return fallback;
     }
 
@@ -242,7 +259,11 @@ INSTRUCTIONS:
       const response = await this.openai.chat.completions.create({
         model: this.isOpenRouter ? 'openai/gpt-4o' : 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are an expert travel copywriter with deep knowledge of geography and local culture. Always respond with valid JSON only.' },
+          {
+            role: 'system',
+            content:
+              'You are an expert travel copywriter with deep knowledge of geography and local culture. Always respond with valid JSON only.',
+          },
           { role: 'user', content: prompt },
         ],
         response_format: { type: 'json_object' },
@@ -263,7 +284,9 @@ INSTRUCTIONS:
         catchphrase: parsed.catchphrase || fallback.catchphrase,
       };
     } catch (e) {
-      this.logger.error(`Error generating trip details: ${e.message}. Using fallback.`);
+      this.logger.error(
+        `Error generating trip details: ${e.message}. Using fallback.`,
+      );
       return fallback;
     }
   }

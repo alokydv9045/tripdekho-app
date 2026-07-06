@@ -47,14 +47,18 @@ async function bootstrap() {
     const dataSource = app.get(DataSource);
     await dataSource.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
     // Add the missing Razorpay columns that were recently added to codebase but missed in migration
-    await dataSource.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS "razorpayAccountId" character varying;`);
-    await dataSource.query(`ALTER TABLE vendors ADD COLUMN IF NOT EXISTS "razorpayLinkedAccountStatus" character varying DEFAULT 'pending';`);
+    await dataSource.query(
+      `ALTER TABLE vendors ADD COLUMN IF NOT EXISTS "razorpayAccountId" character varying;`,
+    );
+    await dataSource.query(
+      `ALTER TABLE vendors ADD COLUMN IF NOT EXISTS "razorpayLinkedAccountStatus" character varying DEFAULT 'pending';`,
+    );
     console.log('✅ Database schema verified and patched successfully.');
   } catch (error) {
     console.error('❌ Failed to patch database schema:', error.message);
   }
 
-  app.setGlobalPrefix('api/v2');  
+  app.setGlobalPrefix('api/v2');
   // CORS — allow frontend origins with credentials
   app.enableCors({
     origin: [

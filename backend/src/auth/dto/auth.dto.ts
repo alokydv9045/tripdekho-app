@@ -31,4 +31,3 @@ export class VerifyOtpDto {
   @IsNotEmpty()
   otp: string;
 }
-

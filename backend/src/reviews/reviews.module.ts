@@ -6,7 +6,9 @@ import { TripEntity } from '../entities/trip.entity';
 import { BookingEntity } from '../entities/booking.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReviewEntity, TripEntity, BookingEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ReviewEntity, TripEntity, BookingEntity]),
+  ],
   controllers: [ReviewsController],
 })
 export class ReviewsModule {}

@@ -71,7 +71,10 @@ export class AdminCareersController {
     @Param('id') id: string,
     @Body() dto: UpdateApplicationStatusDto,
   ) {
-    const data = await this.careersService.updateApplicationStatus(id, dto.status);
+    const data = await this.careersService.updateApplicationStatus(
+      id,
+      dto.status,
+    );
     return { success: true, data };
   }
 

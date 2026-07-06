@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserActivityEntity, ActivityAction } from '../entities/user-activity.entity';
+import {
+  UserActivityEntity,
+  ActivityAction,
+} from '../entities/user-activity.entity';
 
 @Injectable()
 export class ActivityService {
@@ -25,7 +28,8 @@ export class ActivityService {
   }
 
   async getActivities(page = 1, limit = 50, action?: string) {
-    const query = this.activityRepo.createQueryBuilder('activity')
+    const query = this.activityRepo
+      .createQueryBuilder('activity')
       .leftJoinAndSelect('activity.user', 'user')
       .orderBy('activity.createdAt', 'DESC')
       .skip((page - 1) * limit)

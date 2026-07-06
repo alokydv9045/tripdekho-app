@@ -32,7 +32,8 @@ export class StorageService {
   private readonly logger = new Logger(StorageService.name);
   private s3Client: S3Client;
   private readonly bucketName = process.env.S3_BUCKET_NAME || 'tripdekho-media';
-  private readonly endpointUrl = process.env.S3_ENDPOINT || 'http://localhost:9000';
+  private readonly endpointUrl =
+    process.env.S3_ENDPOINT || 'http://localhost:9000';
   // Use public URL for generating frontend links. If empty, falls back to endpointUrl.
   private readonly publicUrl = process.env.S3_PUBLIC_URL || this.endpointUrl;
 
@@ -75,7 +76,8 @@ export class StorageService {
       );
     }
 
-    const extension = path.extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
+    const extension =
+      path.extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
     const filename = `${uuidv4()}${extension}`;
     const key = folder ? `${folder}/${filename}` : filename;
 
@@ -88,7 +90,7 @@ export class StorageService {
       });
 
       await this.s3Client.send(command);
-      
+
       const fileUrl = `${this.publicUrl}/${this.bucketName}/${key}`;
 
       this.logger.log(`Uploaded to S3/MinIO: ${key} (${file.size} bytes)`);

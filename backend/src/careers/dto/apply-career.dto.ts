@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsOptional, IsEmail, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsUUID,
+} from 'class-validator';
 
 export class ApplyCareerDto {
   @IsNotEmpty()

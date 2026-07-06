@@ -58,7 +58,9 @@ export class LoginUserHandler implements ICommandHandler<LoginUserCommand> {
     const payloadRole = user.role;
     const payload = { sub: user.id, email: user.email, role: payloadRole };
 
-    const token = await this.jwtService.signAsync(payload, { expiresIn: '30d' });
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn: '30d',
+    });
     const refreshToken = await this.jwtService.signAsync(
       { sub: user.id },
       { expiresIn: '90d' },

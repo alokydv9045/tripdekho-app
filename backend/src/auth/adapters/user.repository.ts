@@ -32,12 +32,15 @@ export class UserRepository implements IUserRepository {
     const query = this.userRepo.createQueryBuilder('user');
 
     if (last10.length === 10) {
-      query.where('user.phone = :phone OR user.phone = :last10 OR user.phone = :withPlus91 OR user.phone = :with91', {
-        phone,
-        last10,
-        withPlus91: `+91${last10}`,
-        with91: `91${last10}`
-      });
+      query.where(
+        'user.phone = :phone OR user.phone = :last10 OR user.phone = :withPlus91 OR user.phone = :with91',
+        {
+          phone,
+          last10,
+          withPlus91: `+91${last10}`,
+          with91: `91${last10}`,
+        },
+      );
     } else {
       query.where('user.phone = :phone', { phone });
     }

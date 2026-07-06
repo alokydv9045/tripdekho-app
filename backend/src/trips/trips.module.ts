@@ -53,20 +53,27 @@ export class TripsModule implements OnModuleInit {
 
   onModuleInit() {
     // Run cleanup task every hour to auto-complete past trips
-    setInterval(() => {
-      this.autoCompleteTrips().catch(err => this.logger.error('Failed to auto complete trips', err));
-    }, 1000 * 60 * 60);
+    setInterval(
+      () => {
+        this.autoCompleteTrips().catch((err) =>
+          this.logger.error('Failed to auto complete trips', err),
+        );
+      },
+      1000 * 60 * 60,
+    );
 
     // Also run once on startup after 10 seconds
     setTimeout(() => {
-      this.autoCompleteTrips().catch(err => this.logger.error('Failed to auto complete trips on startup', err));
+      this.autoCompleteTrips().catch((err) =>
+        this.logger.error('Failed to auto complete trips on startup', err),
+      );
     }, 10000);
   }
 
   private async autoCompleteTrips() {
     this.logger.log('Running auto-complete trips task...');
     const now = new Date();
-    
+
     // Find published trips that have dates
     const trips = await this.tripRepo.find({
       where: { status: 'published' as any },
@@ -78,7 +85,7 @@ export class TripsModule implements OnModuleInit {
 
     for (const trip of trips) {
       if (trip.dates && trip.dates.length > 0) {
-        const allDatesPast = trip.dates.every(d => new Date(d.endDate) < now);
+        const allDatesPast = trip.dates.every((d) => new Date(d.endDate) < now);
         if (allDatesPast) {
           trip.status = 'completed' as any;
           tripsToSave.push(trip);
@@ -89,7 +96,9 @@ export class TripsModule implements OnModuleInit {
 
     if (tripsToSave.length > 0) {
       await this.tripRepo.save(tripsToSave);
-      this.logger.log(`Auto-completed ${completedCount} trips whose dates have passed.`);
+      this.logger.log(
+        `Auto-completed ${completedCount} trips whose dates have passed.`,
+      );
     }
   }
 }

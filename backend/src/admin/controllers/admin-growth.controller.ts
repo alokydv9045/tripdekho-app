@@ -69,7 +69,7 @@ export class AdminGrowthController {
   ) {
     const campaign = await this.campaignRepo.findOne({ where: { id } });
     if (!campaign) throw new NotFoundException('Campaign not found');
-    await this.campaignRepo.update(id, data as Partial<CampaignEntity>);
+    await this.campaignRepo.update(id, data);
     const updated = await this.campaignRepo.findOne({ where: { id } });
     return { success: true, data: updated };
   }
@@ -97,10 +97,7 @@ export class AdminGrowthController {
   }
 
   @Patch('trips/:id/feature')
-  featureTripPriority(
-    @Param('id') _id: string,
-    @Body() _data: FeatureTripDto,
-  ) {
+  featureTripPriority(@Param('id') _id: string, @Body() _data: FeatureTripDto) {
     return { success: true, data: { success: true } };
   }
 }

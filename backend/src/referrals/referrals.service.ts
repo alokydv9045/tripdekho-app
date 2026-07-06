@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReferralCodeEntity } from '../entities/referral-code.entity';
@@ -26,15 +30,24 @@ export class ReferralsService {
     });
     if (existing) return existing;
 
-    const base = user.name.replace(/[^a-zA-Z]/g, '').substring(0, 5).toUpperCase() || 'USER';
+    const base =
+      user.name
+        .replace(/[^a-zA-Z]/g, '')
+        .substring(0, 5)
+        .toUpperCase() || 'USER';
     let code = '';
     let isUnique = false;
     let attempts = 0;
 
     while (!isUnique && attempts < 5) {
-      const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const randomSuffix = Math.random()
+        .toString(36)
+        .substring(2, 6)
+        .toUpperCase();
       code = `${base}${randomSuffix}`;
-      const dup = await this.referralCodeRepository.findOne({ where: { code } });
+      const dup = await this.referralCodeRepository.findOne({
+        where: { code },
+      });
       if (!dup) isUnique = true;
       attempts++;
     }
@@ -68,7 +81,9 @@ export class ReferralsService {
     return code;
   }
 
-  async validateCode(code: string): Promise<{ valid: boolean; referrerName?: string }> {
+  async validateCode(
+    code: string,
+  ): Promise<{ valid: boolean; referrerName?: string }> {
     const referralCode = await this.referralCodeRepository.findOne({
       where: { code, isActive: true },
       relations: { user: true },
@@ -86,7 +101,10 @@ export class ReferralsService {
     });
   }
 
-  async createReferral(referrerCodeStr: string, newUserId: string): Promise<ReferralEntity> {
+  async createReferral(
+    referrerCodeStr: string,
+    newUserId: string,
+  ): Promise<ReferralEntity> {
     const referralCode = await this.referralCodeRepository.findOne({
       where: { code: referrerCodeStr, isActive: true },
       relations: { user: true },
@@ -99,7 +117,9 @@ export class ReferralsService {
       throw new BadRequestException('Cannot use your own referral code');
     }
 
-    const referredUser = await this.userRepository.findOne({ where: { id: newUserId } });
+    const referredUser = await this.userRepository.findOne({
+      where: { id: newUserId },
+    });
     if (!referredUser) throw new NotFoundException('New user not found');
 
     // Idempotency: don't double-refer

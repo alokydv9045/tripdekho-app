@@ -8,7 +8,11 @@ import { CareerGalleryEntity } from '../entities/career-gallery.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CareerPositionEntity, CareerApplicationEntity, CareerGalleryEntity]),
+    TypeOrmModule.forFeature([
+      CareerPositionEntity,
+      CareerApplicationEntity,
+      CareerGalleryEntity,
+    ]),
   ],
   controllers: [CareersController],
   providers: [CareersService],

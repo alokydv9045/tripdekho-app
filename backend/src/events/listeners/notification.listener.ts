@@ -1,4 +1,3 @@
-
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EventConstants } from '../constants/events.constant';
@@ -9,13 +8,13 @@ import { NotificationService } from '../../notifications/notification.service';
 export class NotificationListener {
   private readonly logger = new Logger(NotificationListener.name);
 
-  constructor(
-    private readonly notificationService: NotificationService,
-  ) {}
+  constructor(private readonly notificationService: NotificationService) {}
 
   @OnEvent(EventConstants.USER_REGISTERED)
   async handleUserRegisteredEvent(event: UserRegisteredEvent) {
-    this.logger.log(`Handling user.registered for ${event.email}, phone: ${event.phone}, hasPassword: ${!!event.generatedPassword}`);
+    this.logger.log(
+      `Handling user.registered for ${event.email}, phone: ${event.phone}, hasPassword: ${!!event.generatedPassword}`,
+    );
 
     // Send welcome email (no password included)
     if (event.email) {
@@ -30,7 +29,7 @@ export class NotificationListener {
     if (event.phone && event.generatedPassword) {
       await this.notificationService.sendMetaWhatsApp(
         event.phone,
-        `Welcome to TripDekho Vendor Network! Your temporary login password is: *${event.generatedPassword}*. Please login and change it.`
+        `Welcome to TripDekho Vendor Network! Your temporary login password is: *${event.generatedPassword}*. Please login and change it.`,
       );
     }
   }

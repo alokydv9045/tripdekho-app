@@ -1,4 +1,11 @@
-import { IsEmail, IsOptional, IsString, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateVendorDto {

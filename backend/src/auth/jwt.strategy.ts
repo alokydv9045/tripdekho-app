@@ -36,7 +36,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         (request: Request) => {
           let token: string | null = null;
           if (request?.cookies) {
-            token = (request.cookies as Record<string, string>)['token'] ?? null;
+            token =
+              (request.cookies as Record<string, string>)['token'] ?? null;
           }
           if (!token && request.headers.authorization) {
             token = request.headers.authorization.split(' ')[1] ?? null;
@@ -47,7 +48,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
           try {
             // Very strict validation: The token must ONLY contain valid base64url characters and two dots.
-            if (!/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(token)) {
+            if (
+              !/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(token)
+            ) {
               return null;
             }
             return token;
@@ -57,10 +60,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>(
-        'JWT_SECRET',
-        'super-secret',
-      ),
+      secretOrKey: configService.get<string>('JWT_SECRET', 'super-secret'),
     });
   }
 
@@ -80,13 +80,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
 
       // Check for global lockdown
-      const globalSettings = await this.globalSettingRepository.findOne({ where: { configName: 'default' } });
+      const globalSettings = await this.globalSettingRepository.findOne({
+        where: { configName: 'default' },
+      });
       if (globalSettings?.lockdownTimestamp) {
         const tokenIat = payload.iat ? new Date(payload.iat * 1000) : null;
         if (tokenIat && tokenIat < globalSettings.lockdownTimestamp) {
           // If the user is an admin, allow them to bypass the lockdown
-          if (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'tech_admin') {
-            throw new UnauthorizedException('Session invalidated due to security lockdown');
+          if (
+            user.role !== 'admin' &&
+            user.role !== 'super_admin' &&
+            user.role !== 'tech_admin'
+          ) {
+            throw new UnauthorizedException(
+              'Session invalidated due to security lockdown',
+            );
           }
         }
       }

@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CareerPositionEntity } from '../entities/career-position.entity';
-import { CareerApplicationEntity, ApplicationStatus } from '../entities/career-application.entity';
+import {
+  CareerApplicationEntity,
+  ApplicationStatus,
+} from '../entities/career-application.entity';
 import { ApplyCareerDto } from './dto/apply-career.dto';
 
 import { CareerGalleryEntity } from '../entities/career-gallery.entity';
@@ -124,7 +127,8 @@ export class CareersService {
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
 
-    const qb = this.applicationRepo.createQueryBuilder('app')
+    const qb = this.applicationRepo
+      .createQueryBuilder('app')
       .leftJoinAndSelect('app.position', 'position')
       .orderBy('app.createdAt', 'DESC')
       .skip((page - 1) * limit)
@@ -135,7 +139,9 @@ export class CareersService {
     }
 
     if (query.positionId) {
-      qb.andWhere('app.position_id = :positionId', { positionId: query.positionId });
+      qb.andWhere('app.position_id = :positionId', {
+        positionId: query.positionId,
+      });
     }
 
     const [applications, total] = await qb.getManyAndCount();

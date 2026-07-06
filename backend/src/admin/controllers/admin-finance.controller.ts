@@ -36,24 +36,27 @@ export class AdminFinanceController {
   async getPaymentAudit(@Query() query: Record<string, unknown>) {
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
-    
-    const qb = this.vendorRepo.manager.createQueryBuilder(BookingEntity, 'booking')
+
+    const qb = this.vendorRepo.manager
+      .createQueryBuilder(BookingEntity, 'booking')
       .leftJoinAndSelect('booking.user', 'user')
       .leftJoinAndSelect('booking.vendor', 'vendor')
       .leftJoinAndSelect('booking.trip', 'trip')
-      .where('booking.paymentStatus = :paymentStatus', { paymentStatus: PaymentStatus.PAID })
+      .where('booking.paymentStatus = :paymentStatus', {
+        paymentStatus: PaymentStatus.PAID,
+      })
       .orderBy('booking.createdAt', 'DESC');
 
     if (query.search && typeof query.search === 'string') {
       qb.andWhere(
         '(booking.bookingNumber ILIKE :search OR user.name ILIKE :search OR user.email ILIKE :search)',
-        { search: `%${query.search}%` }
+        { search: `%${query.search}%` },
       );
     }
 
     qb.skip((page - 1) * limit).take(limit);
     const [bookings, total] = await qb.getManyAndCount();
-    
+
     const payments = bookings.map((b: any) => ({
       id: b.id,
       bookingNumber: b.bookingNumber,
@@ -124,8 +127,9 @@ export class AdminFinanceController {
   async getAllPayouts(@Query() query: Record<string, unknown>) {
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
-    
-    const qb = this.payoutRepo.createQueryBuilder('payout')
+
+    const qb = this.payoutRepo
+      .createQueryBuilder('payout')
       .leftJoinAndSelect('payout.vendor', 'vendor')
       .orderBy('payout.createdAt', 'DESC');
 
@@ -154,19 +158,28 @@ export class AdminFinanceController {
   @Get('wallets')
   async getVendorWallets() {
     const vendors = await this.vendorRepo.find();
-    
+
     const wallets = await Promise.all(
       vendors.map(async (vendor) => {
         const bookings = await this.vendorRepo.manager.find(BookingEntity, {
-          where: { vendor: { id: vendor.id }, paymentStatus: PaymentStatus.PAID }
+          where: {
+            vendor: { id: vendor.id },
+            paymentStatus: PaymentStatus.PAID,
+          },
         });
         const payouts = await this.payoutRepo.find({
-          where: { vendor: { id: vendor.id }, status: PayoutStatus.PAID }
+          where: { vendor: { id: vendor.id }, status: PayoutStatus.PAID },
         });
 
-        const totalEarned = bookings.reduce((sum, b) => sum + (Number(b.vendorAmount) || 0), 0);
-        const totalPaid = payouts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        
+        const totalEarned = bookings.reduce(
+          (sum, b) => sum + (Number(b.vendorAmount) || 0),
+          0,
+        );
+        const totalPaid = payouts.reduce(
+          (sum, p) => sum + (Number(p.amount) || 0),
+          0,
+        );
+
         return {
           id: vendor.id,
           vendor,
@@ -174,9 +187,9 @@ export class AdminFinanceController {
           totalEarned,
           isActive: !vendor.isDeleted,
         };
-      })
+      }),
     );
-    
+
     return { success: true, data: { wallets, total: wallets.length } };
   }
 }

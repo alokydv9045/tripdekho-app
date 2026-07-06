@@ -35,7 +35,11 @@ export class ReferralEntity {
   @JoinColumn()
   referralCode: ReferralCodeEntity;
 
-  @Column({ type: 'enum', enum: ReferralStatus, default: ReferralStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: ReferralStatus,
+    default: ReferralStatus.PENDING,
+  })
   status: ReferralStatus;
 
   @CreateDateColumn()

@@ -78,7 +78,11 @@ export class PaymentEntity {
   @Column({ nullable: true })
   razorpayRefundId: string;
 
-  @Column({ type: 'simple-enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  @Column({
+    type: 'simple-enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+  })
   status: PaymentStatus;
 
   @Column({ type: 'simple-enum', enum: PaymentMethod, nullable: true })

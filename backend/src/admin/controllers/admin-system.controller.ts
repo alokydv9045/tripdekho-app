@@ -50,11 +50,36 @@ export class AdminSystemController {
     const count = await this.auditLogRepo.count();
     if (count === 0) {
       await this.auditLogRepo.save([
-        { event: 'Database connection verified', type: 'success', moduleName: 'system', ipAddress: '127.0.0.1' },
-        { event: 'Cache buffer cleared', type: 'info', moduleName: 'system', ipAddress: '127.0.0.1' },
-        { event: 'Session token invalidated', type: 'warning', moduleName: 'auth', ipAddress: '192.168.1.105' },
-        { event: 'Primary node sync complete', type: 'success', moduleName: 'system', ipAddress: '127.0.0.1' },
-        { event: 'Background worker started', type: 'info', moduleName: 'system', ipAddress: '127.0.0.1' },
+        {
+          event: 'Database connection verified',
+          type: 'success',
+          moduleName: 'system',
+          ipAddress: '127.0.0.1',
+        },
+        {
+          event: 'Cache buffer cleared',
+          type: 'info',
+          moduleName: 'system',
+          ipAddress: '127.0.0.1',
+        },
+        {
+          event: 'Session token invalidated',
+          type: 'warning',
+          moduleName: 'auth',
+          ipAddress: '192.168.1.105',
+        },
+        {
+          event: 'Primary node sync complete',
+          type: 'success',
+          moduleName: 'system',
+          ipAddress: '127.0.0.1',
+        },
+        {
+          event: 'Background worker started',
+          type: 'info',
+          moduleName: 'system',
+          ipAddress: '127.0.0.1',
+        },
       ]);
     }
   }
@@ -66,8 +91,8 @@ export class AdminSystemController {
     const activeVendors = await this.vendorRepo.count({
       where: [
         { verificationStatus: 'approved' },
-        { verificationStatus: 'verified' }
-      ]
+        { verificationStatus: 'verified' },
+      ],
     });
     const totalTrips = await this.tripRepo.count();
     const totalBookings = await this.bookingRepo.count();
@@ -85,14 +110,18 @@ export class AdminSystemController {
     try {
       revenueByMonth = await this.bookingRepo
         .createQueryBuilder('booking')
-        .select("EXTRACT(MONTH FROM booking.createdAt)", 'month')
-        .addSelect("EXTRACT(YEAR FROM booking.createdAt)", 'year')
-        .addSelect("SUM(booking.totalPrice)", 'revenue')
+        .select('EXTRACT(MONTH FROM booking.createdAt)', 'month')
+        .addSelect('EXTRACT(YEAR FROM booking.createdAt)', 'year')
+        .addSelect('SUM(booking.totalPrice)', 'revenue')
         .where('booking.paymentStatus = :status', { status: 'paid' })
-        .groupBy("EXTRACT(YEAR FROM booking.createdAt), EXTRACT(MONTH FROM booking.createdAt)")
-        .orderBy("EXTRACT(YEAR FROM booking.createdAt), EXTRACT(MONTH FROM booking.createdAt)")
+        .groupBy(
+          'EXTRACT(YEAR FROM booking.createdAt), EXTRACT(MONTH FROM booking.createdAt)',
+        )
+        .orderBy(
+          'EXTRACT(YEAR FROM booking.createdAt), EXTRACT(MONTH FROM booking.createdAt)',
+        )
         .getRawMany();
-      revenueByMonth = revenueByMonth.map(r => ({
+      revenueByMonth = revenueByMonth.map((r) => ({
         id: { month: Number(r.month), year: Number(r.year) },
         revenue: Number(r.revenue || 0),
       }));
@@ -100,7 +129,7 @@ export class AdminSystemController {
       // Revenue aggregation might fail on empty DB
     }
 
-    // Since calculating exact 30-day trends across all entities requires complex queries, 
+    // Since calculating exact 30-day trends across all entities requires complex queries,
     // we return standard indicators based on recent data or 'New' if not enough historical data.
     return {
       success: true,
@@ -120,15 +149,17 @@ export class AdminSystemController {
           users: totalUsers > 0 ? '+100%' : '0%',
           vendors: totalVendors > 0 ? '+100%' : '0%',
           revenue: Number(result?.totalRevenue || 0) > 0 ? '+100%' : '0%',
-          commission: Number(result?.platformFees || 0) > 0 ? '+100%' : '0%'
-        }
+          commission: Number(result?.platformFees || 0) > 0 ? '+100%' : '0%',
+        },
       },
     };
   }
 
   @Get('settings')
   async getSystemSettings() {
-    let settings = await this.globalSettingRepo.findOne({ where: { configName: 'default' } });
+    let settings = await this.globalSettingRepo.findOne({
+      where: { configName: 'default' },
+    });
     if (!settings) {
       settings = this.globalSettingRepo.create({
         configName: 'default',
@@ -141,7 +172,9 @@ export class AdminSystemController {
 
   @Put('settings')
   async updateSystemSettings(@Body() settingsData: Record<string, any>) {
-    let settings = await this.globalSettingRepo.findOne({ where: { configName: 'default' } });
+    let settings = await this.globalSettingRepo.findOne({
+      where: { configName: 'default' },
+    });
     if (settings) {
       Object.assign(settings, settingsData);
       await this.globalSettingRepo.save(settings);
@@ -213,18 +246,23 @@ export class AdminSystemController {
     const page = Number(query.page) || 1;
     const skip = (page - 1) * limit;
 
-    const qb = this.auditLogRepo.createQueryBuilder('log')
+    const qb = this.auditLogRepo
+      .createQueryBuilder('log')
       .leftJoinAndSelect('log.user', 'user')
       .orderBy('log.createdAt', 'DESC')
       .skip(skip)
       .take(limit);
 
     if (query.moduleName && query.moduleName !== 'all') {
-      qb.andWhere('log.moduleName = :moduleName', { moduleName: query.moduleName });
+      qb.andWhere('log.moduleName = :moduleName', {
+        moduleName: query.moduleName,
+      });
     }
 
     if (query.search && typeof query.search === 'string') {
-      qb.andWhere('(log.event ILIKE :search OR log.details ILIKE :search)', { search: `%${query.search}%` });
+      qb.andWhere('(log.event ILIKE :search OR log.details ILIKE :search)', {
+        search: `%${query.search}%`,
+      });
     }
 
     const [logs, total] = await qb.getManyAndCount();
@@ -247,8 +285,11 @@ export class AdminSystemController {
   async clearAuditLogs(@Query() query: Record<string, string>) {
     const period = query.period || 'all'; // e.g. '30days', '60days', 'all'
     const now = new Date();
-    
-    let deleteQuery = this.auditLogRepo.createQueryBuilder().delete().from(AuditLogEntity);
+
+    let deleteQuery = this.auditLogRepo
+      .createQueryBuilder()
+      .delete()
+      .from(AuditLogEntity);
 
     if (period === '30days') {
       const date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -270,9 +311,14 @@ export class AdminSystemController {
 
   @Post('maintenance')
   async toggleMaintenance() {
-    let settings = await this.globalSettingRepo.findOne({ where: { configName: 'default' } });
+    let settings = await this.globalSettingRepo.findOne({
+      where: { configName: 'default' },
+    });
     if (!settings) {
-      settings = this.globalSettingRepo.create({ configName: 'default', isMaintenanceMode: true });
+      settings = this.globalSettingRepo.create({
+        configName: 'default',
+        isMaintenanceMode: true,
+      });
     } else {
       settings.isMaintenanceMode = !settings.isMaintenanceMode;
     }
@@ -290,7 +336,9 @@ export class AdminSystemController {
 
   @Post('lockdown')
   async engageLockdown() {
-    let settings = await this.globalSettingRepo.findOne({ where: { configName: 'default' } });
+    let settings = await this.globalSettingRepo.findOne({
+      where: { configName: 'default' },
+    });
     if (!settings) {
       settings = this.globalSettingRepo.create({ configName: 'default' });
     }

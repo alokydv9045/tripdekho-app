@@ -62,8 +62,14 @@ export class TripsController {
     @Body() createTripDto: CreateTripDto,
   ) {
     // Enforce KYC check — vendor must be verified before creating trips
-    const vendor = await this.vendorRepo.findOne({ where: { user: { id: userId } } });
-    if (vendor && vendor.kycStatus !== 'approved' && vendor.kycStatus !== 'verified') {
+    const vendor = await this.vendorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+    if (
+      vendor &&
+      vendor.kycStatus !== 'approved' &&
+      vendor.kycStatus !== 'verified'
+    ) {
       throw new ForbiddenException(
         'KYC verification required. Please complete your KYC before creating trips.',
       );
@@ -118,7 +124,10 @@ export class TripsController {
 
     // Log search activity unconditionally (guest or logged-in)
     this.activityService.logActivity(userId || '', ActivityAction.SEARCH, {
-      q, category, city, tags: tagArray
+      q,
+      category,
+      city,
+      tags: tagArray,
     });
 
     return result;
@@ -126,7 +135,7 @@ export class TripsController {
 
   @Get('my-trips')
   async getMyTrips(@CurrentUser('id') userId: string, @Query() query: any) {
-    let trips = await this.tripRepo.find({
+    const trips = await this.tripRepo.find({
       where: { vendor: { user: { id: userId } } },
       relations: {
         location: true,
@@ -137,26 +146,34 @@ export class TripsController {
       },
       order: { createdAt: 'DESC' },
     });
-    
+
     // Lazy Evaluation: Automatically mark published trips as completed if all dates have passed
     let needsSave = false;
     const now = new Date();
     for (const trip of trips) {
-      if (trip.status === 'published' as any && trip.dates && trip.dates.length > 0) {
-        const allDatesPast = trip.dates.every(d => new Date(d.endDate) < now);
+      if (
+        trip.status === ('published' as any) &&
+        trip.dates &&
+        trip.dates.length > 0
+      ) {
+        const allDatesPast = trip.dates.every((d) => new Date(d.endDate) < now);
         if (allDatesPast) {
           trip.status = 'completed' as any;
           needsSave = true;
         }
       }
     }
-    
+
     if (needsSave) {
-      await this.tripRepo.save(trips.filter(t => t.status === 'completed' as any));
+      await this.tripRepo.save(
+        trips.filter((t) => t.status === ('completed' as any)),
+      );
     }
-    
+
     // Attach vendor stats
-    const vendorIds = [...new Set(trips.map(t => t.vendor?.id).filter(Boolean))];
+    const vendorIds = [
+      ...new Set(trips.map((t) => t.vendor?.id).filter(Boolean)),
+    ];
     if (vendorIds.length > 0) {
       const stats = await this.tripRepository.getVendorStats(vendorIds);
       for (const trip of trips) {
@@ -169,7 +186,7 @@ export class TripsController {
         }
       }
     }
-    
+
     return { success: true, data: trips };
   }
 
@@ -212,7 +229,7 @@ export class TripsController {
     if (!trip) {
       throw new NotFoundException('Trip not found');
     }
-    
+
     // Attach vendor stats
     if (trip.vendor) {
       const stats = await this.tripRepository.getVendorStats([trip.vendor.id]);
@@ -222,7 +239,7 @@ export class TripsController {
         reviews: vStats.count,
       };
     }
-    
+
     // Log trip view unconditionally (guest or logged-in)
     this.activityService.logActivity(userId || '', ActivityAction.VIEW_TRIP, {
       tripId: trip.id,
@@ -241,7 +258,14 @@ export class TripsController {
   ) {
     const trip = await this.tripRepo.findOne({
       where: { id },
-      relations: { location: true, price: true, dates: true, itinerary: true, media: true, vendor: { user: true } },
+      relations: {
+        location: true,
+        price: true,
+        dates: true,
+        itinerary: true,
+        media: true,
+        vendor: { user: true },
+      },
     });
     if (!trip) {
       throw new NotFoundException('Trip not found');
@@ -251,11 +275,12 @@ export class TripsController {
     }
     // Merge price relation deeply to avoid orphaned columns like occupancyOptions
     if (updateData.price) {
-      if (!trip.price) trip.price = this.tripRepo.manager.create('TripPriceEntity');
+      if (!trip.price)
+        trip.price = this.tripRepo.manager.create('TripPriceEntity');
       Object.assign(trip.price, updateData.price);
       delete updateData.price;
     }
-    
+
     Object.assign(trip, updateData);
     const updated = await this.tripRepo.save(trip);
     return { success: true, data: updated };
@@ -311,8 +336,14 @@ export class TripsController {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB for trip images
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/')) {
-          return cb(new BadRequestException('Only image and video files are allowed'), false);
+        if (
+          !file.mimetype.startsWith('image/') &&
+          !file.mimetype.startsWith('video/')
+        ) {
+          return cb(
+            new BadRequestException('Only image and video files are allowed'),
+            false,
+          );
         }
         cb(null, true);
       },
@@ -324,7 +355,9 @@ export class TripsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException('No file uploaded. Send a file with field name "file".');
+      throw new BadRequestException(
+        'No file uploaded. Send a file with field name "file".',
+      );
     }
 
     const trip = await this.tripRepo.findOne({ where: { id } });
@@ -335,7 +368,14 @@ export class TripsController {
     const result = await this.storageService.uploadImage(file, {
       folder: `tripdekho/trips/${id}`,
       maxFileSize: 10 * 1024 * 1024,
-      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'],
+      allowedMimeTypes: [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'video/mp4',
+        'video/webm',
+      ],
     });
 
     // Save to trip_media table
@@ -350,7 +390,12 @@ export class TripsController {
 
     return {
       success: true,
-      data: { id: media.id, url: result.secureUrl, publicId: result.publicId, isPrimary: false },
+      data: {
+        id: media.id,
+        url: result.secureUrl,
+        publicId: result.publicId,
+        isPrimary: false,
+      },
       message: 'Image uploaded successfully',
     };
   }
@@ -361,7 +406,9 @@ export class TripsController {
     @Param('id') id: string,
     @Param('imageId') imageId: string,
   ) {
-    const media = await this.tripMediaRepo.findOne({ where: { id: imageId, trip: { id } } });
+    const media = await this.tripMediaRepo.findOne({
+      where: { id: imageId, trip: { id } },
+    });
     if (!media) throw new NotFoundException('Image not found');
 
     // Delete from Cloudinary
@@ -372,7 +419,10 @@ export class TripsController {
     // Delete from database
     await this.tripMediaRepo.remove(media);
 
-    return { success: true, message: 'Image deleted from Cloudinary and database' };
+    return {
+      success: true,
+      message: 'Image deleted from Cloudinary and database',
+    };
   }
 
   @Public()
@@ -403,7 +453,11 @@ export class TripsController {
     const trip = await this.tripRepo.findOne({ where: { id } });
     if (!trip) return { success: true, data: [] };
     const similar = await this.tripRepo.find({
-      where: { category: trip.category?.length > 0 ? Like(`%${trip.category[0]}%`) : undefined, isActive: true },
+      where: {
+        category:
+          trip.category?.length > 0 ? Like(`%${trip.category[0]}%`) : undefined,
+        isActive: true,
+      },
       take: limit,
       relations: { location: true, price: true, media: true },
     });

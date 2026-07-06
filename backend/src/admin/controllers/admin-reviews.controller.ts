@@ -30,7 +30,8 @@ export class AdminReviewsController {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
 
-    let qb = this.reviewRepo.createQueryBuilder('review')
+    let qb = this.reviewRepo
+      .createQueryBuilder('review')
       .leftJoinAndSelect('review.user', 'user')
       .leftJoinAndSelect('review.trip', 'trip')
       .orderBy('review.createdAt', 'DESC')
@@ -44,21 +45,25 @@ export class AdminReviewsController {
     if (query.search && typeof query.search === 'string') {
       qb = qb.andWhere(
         '(review.comment ILIKE :search OR user.name ILIKE :search OR trip.title ILIKE :search)',
-        { search: `%${query.search}%` }
+        { search: `%${query.search}%` },
       );
     }
 
     const [reviews, total] = await qb.getManyAndCount();
 
     // Map user → customer for frontend compatibility
-    const mappedReviews = reviews.map(r => ({
+    const mappedReviews = reviews.map((r) => ({
       ...r,
       customer: r.user,
     }));
 
     return {
       success: true,
-      data: { reviews: mappedReviews, total, totalPages: Math.ceil(total / limit) },
+      data: {
+        reviews: mappedReviews,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

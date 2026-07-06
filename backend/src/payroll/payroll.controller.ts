@@ -39,10 +39,7 @@ export class PayrollController {
   }
 
   @Post('request-payout')
-  async requestPayout(
-    @Request() req: any,
-    @Body() body: ProcessPayrollDto,
-  ) {
+  async requestPayout(@Request() req: any, @Body() body: ProcessPayrollDto) {
     const vendorId = req.user.vendorId || req.user.id;
     return this.payrollService.requestPayout(vendorId, body);
   }

@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, IsNotEmpty, Min, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsNotEmpty,
+  Min,
+  MaxLength,
+} from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateCampaignDto {

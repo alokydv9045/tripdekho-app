@@ -8,14 +8,10 @@ import { UserEntity } from '../entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      ReferralCodeEntity,
-      ReferralEntity,
-      UserEntity,
-    ])
+    TypeOrmModule.forFeature([ReferralCodeEntity, ReferralEntity, UserEntity]),
   ],
   controllers: [ReferralsController],
   providers: [ReferralsService],
-  exports: [ReferralsService]
+  exports: [ReferralsService],
 })
 export class ReferralsModule {}

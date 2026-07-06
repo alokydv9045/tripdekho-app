@@ -41,7 +41,7 @@ export class AuthController {
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     private readonly notificationService: NotificationService,
-  ) { }
+  ) {}
 
   @Public()
   @Throttle({ default: { limit: 100, ttl: 60000 } })
@@ -64,7 +64,11 @@ export class AuthController {
     if (!user) {
       return { success: false, message: 'User not found' };
     }
-    const { passwordHash: _ph, mfaSecret: _mfa, ...safeUser } = user as UserEntity & { passwordHash: string; mfaSecret: string };
+    const {
+      passwordHash: _ph,
+      mfaSecret: _mfa,
+      ...safeUser
+    } = user as UserEntity & { passwordHash: string; mfaSecret: string };
 
     return { success: true, data: safeUser };
   }
@@ -84,13 +88,16 @@ export class AuthController {
       const normalizedPhone = body.phone.replace(/\D/g, '').slice(-10);
 
       if (normalizedPhone.length < 10) {
-        throw new BadRequestException('Valid 10-digit phone number is required');
+        throw new BadRequestException(
+          'Valid 10-digit phone number is required',
+        );
       }
 
-      let user = await this.userRepo.createQueryBuilder('user')
+      let user = await this.userRepo
+        .createQueryBuilder('user')
         .where('user.phone LIKE :phone', { phone: `%${normalizedPhone}` })
         .getOne();
-        
+
       let isNewUser = false;
 
       if (!user) {
@@ -118,7 +125,9 @@ export class AuthController {
 
       return {
         success: true,
-        message: isNewUser ? 'Account created successfully!' : 'Logged in successfully!',
+        message: isNewUser
+          ? 'Account created successfully!'
+          : 'Logged in successfully!',
         isNewUser,
         data: {
           user,
@@ -127,7 +136,7 @@ export class AuthController {
         },
       };
     } catch (error: any) {
-      console.error("loginWithPhone error:", error);
+      console.error('loginWithPhone error:', error);
       throw new BadRequestException(error.message || 'Login failed');
     }
   }
@@ -163,10 +172,14 @@ export class AuthController {
     @Body() body: { currentPassword: string; newPassword: string },
   ) {
     if (!body.currentPassword || !body.newPassword) {
-      throw new BadRequestException('Both currentPassword and newPassword are required');
+      throw new BadRequestException(
+        'Both currentPassword and newPassword are required',
+      );
     }
     if (body.newPassword.length < 6) {
-      throw new BadRequestException('New password must be at least 6 characters');
+      throw new BadRequestException(
+        'New password must be at least 6 characters',
+      );
     }
 
     // Fetch user WITH password hash for verification
@@ -178,8 +191,12 @@ export class AuthController {
 
     if (!user) throw new UnauthorizedException('User not found');
 
-    const isValid = await bcrypt.compare(body.currentPassword, user.passwordHash);
-    if (!isValid) throw new UnauthorizedException('Current password is incorrect');
+    const isValid = await bcrypt.compare(
+      body.currentPassword,
+      user.passwordHash,
+    );
+    if (!isValid)
+      throw new UnauthorizedException('Current password is incorrect');
 
     const newHash = await bcrypt.hash(body.newPassword, 12);
     await this.userRepo.update(userId, {
@@ -194,13 +211,11 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() body: { identifier: string }) {
-    if (!body.identifier) throw new BadRequestException('Identifier is required');
+    if (!body.identifier)
+      throw new BadRequestException('Identifier is required');
 
     const user = await this.userRepo.findOne({
-      where: [
-        { email: body.identifier },
-        { phone: body.identifier }
-      ]
+      where: [{ email: body.identifier }, { phone: body.identifier }],
     });
 
     if (!user) {
@@ -222,7 +237,7 @@ export class AuthController {
 
     await this.notificationService.sendMetaWhatsApp(
       user.phone,
-      `Your TripDekho password reset code is: ${otp}. It will expire in 10 minutes.`
+      `Your TripDekho password reset code is: ${otp}. It will expire in 10 minutes.`,
     );
 
     return { success: true, message: 'OTP sent successfully to WhatsApp.' };
@@ -230,17 +245,24 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
-  async resetPassword(@Body() body: { identifier: string; otp: string; newPassword: string }) {
+  async resetPassword(
+    @Body() body: { identifier: string; otp: string; newPassword: string },
+  ) {
     if (!body.identifier || !body.otp || !body.newPassword) {
       throw new BadRequestException('Missing required fields');
     }
 
     if (body.newPassword.length < 6) {
-      throw new BadRequestException('New password must be at least 6 characters');
+      throw new BadRequestException(
+        'New password must be at least 6 characters',
+      );
     }
 
-    const user = await this.userRepo.createQueryBuilder('user')
-      .where('user.email = :identifier OR user.phone = :identifier', { identifier: body.identifier })
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.email = :identifier OR user.phone = :identifier', {
+        identifier: body.identifier,
+      })
       .addSelect('user.resetPasswordOtp')
       .addSelect('user.resetPasswordOtpExpiresAt')
       .getOne();
@@ -251,7 +273,10 @@ export class AuthController {
       throw new BadRequestException('Invalid OTP');
     }
 
-    if (!user.resetPasswordOtpExpiresAt || new Date() > user.resetPasswordOtpExpiresAt) {
+    if (
+      !user.resetPasswordOtpExpiresAt ||
+      new Date() > user.resetPasswordOtpExpiresAt
+    ) {
       throw new BadRequestException('OTP has expired');
     }
 
@@ -265,6 +290,9 @@ export class AuthController {
       mustChangePassword: false,
     });
 
-    return { success: true, message: 'Password reset successfully. You can now log in.' };
+    return {
+      success: true,
+      message: 'Password reset successfully. You can now log in.',
+    };
   }
 }

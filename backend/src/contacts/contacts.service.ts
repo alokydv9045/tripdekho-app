@@ -43,8 +43,10 @@ export class ContactsService {
   }
 
   async getNewsletters() {
-    const subscribers = await this.newsletterRepo.find({ order: { createdAt: 'DESC' } });
-    return subscribers.map(s => s.email);
+    const subscribers = await this.newsletterRepo.find({
+      order: { createdAt: 'DESC' },
+    });
+    return subscribers.map((s) => s.email);
   }
 
   async updateMessageStatus(id: string, status: string) {

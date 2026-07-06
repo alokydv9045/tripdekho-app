@@ -74,15 +74,15 @@ import { ActivityModule } from './activity/activity.module';
         const baseConfig = {
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: true,
-      logging: true, // Enabled to allow table creation
+          logging: true, // Enabled to allow table creation
         };
 
         if (dbType === 'better-sqlite3') {
           return {
-            type: 'better-sqlite3' as any,
+            type: 'better-sqlite3',
             database: './dev.db',
             ...baseConfig,
-          } as TypeOrmModuleOptions;
+          };
         }
 
         return {
@@ -90,12 +90,15 @@ import { ActivityModule } from './activity/activity.module';
           url: configService.get<string>('DATABASE_URL'),
           schema: 'tripdekho',
           extra: {
-            ...(configService.get<string>('DB_SSL') === 'true' ? { ssl: { rejectUnauthorized: false } } : {}),
+            ...(configService.get<string>('DB_SSL') === 'true'
+              ? { ssl: { rejectUnauthorized: false } }
+              : {}),
             max: 20, // Connection pool size
-            statement_timeout: 30000, logging: true, // 30 seconds
+            statement_timeout: 30000,
+            logging: true, // 30 seconds
           },
           ...baseConfig,
-        } as TypeOrmModuleOptions;
+        };
       },
     }),
     CacheModule.register({

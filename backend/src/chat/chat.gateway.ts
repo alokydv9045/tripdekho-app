@@ -53,10 +53,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = decoded.id;
 
       this.connectedUsers.set(userId, client.id);
-      
+
       // Join a user-specific room to easily send messages to them
       client.join(userId);
-
     } catch (error) {
       client.disconnect();
     }
@@ -90,25 +89,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Decode user from token again to ensure security
       const token = client.handshake.auth?.token;
       if (!token) return;
-      const decoded = this.jwtService.verify(token, { secret: this.configService.get('JWT_SECRET') });
+      const decoded = this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_SECRET'),
+      });
       const senderId = decoded.id;
 
       // Save message in database
-      const message = await this.chatService.sendMessage(data.conversationId, senderId, data.content);
+      const message = await this.chatService.sendMessage(
+        data.conversationId,
+        senderId,
+        data.content,
+      );
 
       // Broadcast to everyone in the conversation room
       this.server.to(data.conversationId).emit('new_message', message);
-      
+
       // Also broadcast to the other user to trigger notifications if they are not in the room
-      const conversation = await this.chatService.getConversationById(data.conversationId, senderId);
+      const conversation = await this.chatService.getConversationById(
+        data.conversationId,
+        senderId,
+      );
       const isVendorSender = conversation.vendor?.user?.id === senderId;
-      const receiverId = isVendorSender ? conversation.customer?.id : conversation.vendor?.user?.id;
-      
+      const receiverId = isVendorSender
+        ? conversation.customer?.id
+        : conversation.vendor?.user?.id;
+
       if (receiverId) {
         this.server.to(receiverId).emit('new_message', message);
         this.server.to(receiverId).emit('conversation_update', conversation);
       }
-
     } catch (error) {
       console.error('Socket send_message error:', error);
     }

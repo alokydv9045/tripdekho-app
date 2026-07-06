@@ -37,8 +37,9 @@ export class AdminTripsController {
   async getTrips(@Query() query: Record<string, unknown>) {
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
-    
-    const queryBuilder = this.tripRepo.createQueryBuilder('trip')
+
+    const queryBuilder = this.tripRepo
+      .createQueryBuilder('trip')
       .leftJoinAndSelect('trip.vendor', 'vendor')
       .leftJoinAndSelect('trip.price', 'price')
       .leftJoinAndSelect('trip.location', 'location')
@@ -49,20 +50,22 @@ export class AdminTripsController {
     }
 
     if (query.category && typeof query.category === 'string') {
-      queryBuilder.andWhere('trip.category LIKE :category', { category: `%${query.category}%` });
+      queryBuilder.andWhere('trip.category LIKE :category', {
+        category: `%${query.category}%`,
+      });
     }
 
     if (query.search && typeof query.search === 'string') {
       queryBuilder.andWhere(
         '(trip.title ILIKE :search OR vendor.businessName ILIKE :search)',
-        { search: `%${query.search}%` }
+        { search: `%${query.search}%` },
       );
     }
 
     queryBuilder.skip((page - 1) * limit).take(limit);
 
     const [trips, total] = await queryBuilder.getManyAndCount();
-    
+
     return { success: true, data: { trips, total, page, limit } };
   }
 
@@ -94,7 +97,10 @@ export class AdminTripsController {
     @Param('id') id: string,
     @Body() tripData: any, // Use any because ForceUpdateTripDto might not match nested price
   ) {
-    const trip = await this.tripRepo.findOne({ where: { id }, relations: { price: true } });
+    const trip = await this.tripRepo.findOne({
+      where: { id },
+      relations: { price: true },
+    });
     if (!trip) throw new NotFoundException('Trip not found');
 
     if (tripData.price && typeof tripData.price.amount === 'number') {
@@ -109,15 +115,21 @@ export class AdminTripsController {
       if (trip.price) {
         trip.price.amount = tripData.price.basePrice;
       } else {
-        trip.price = { amount: tripData.price.basePrice, currency: 'INR' } as any;
+        trip.price = {
+          amount: tripData.price.basePrice,
+          currency: 'INR',
+        } as any;
       }
       delete tripData.price;
     }
 
     Object.assign(trip, tripData);
     await this.tripRepo.save(trip);
-    
-    const updated = await this.tripRepo.findOne({ where: { id }, relations: { price: true } });
+
+    const updated = await this.tripRepo.findOne({
+      where: { id },
+      relations: { price: true },
+    });
     return { success: true, data: { trip: updated } };
   }
 
@@ -128,7 +140,7 @@ export class AdminTripsController {
   ) {
     const trip = await this.tripRepo.findOne({ where: { id } });
     if (!trip) throw new NotFoundException('Trip not found');
-    await this.tripRepo.update(id, { status: body.status as TripStatus });
+    await this.tripRepo.update(id, { status: body.status });
     return { success: true, data: { success: true } };
   }
 

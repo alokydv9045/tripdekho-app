@@ -16,7 +16,16 @@ const CommandHandlers = [CreateVendorHandler];
 const QueryHandlers = [GetVendorHandler];
 
 @Module({
-  imports: [CqrsModule, TypeOrmModule.forFeature([VendorEntity, UserEntity, TripEntity, ReviewEntity, BookingEntity])],
+  imports: [
+    CqrsModule,
+    TypeOrmModule.forFeature([
+      VendorEntity,
+      UserEntity,
+      TripEntity,
+      ReviewEntity,
+      BookingEntity,
+    ]),
+  ],
   controllers: [VendorsController],
   providers: [
     {

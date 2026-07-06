@@ -26,7 +26,11 @@ export class ConversationEntity {
   vendor: VendorEntity;
 
   // Optional link to a specific trip context
-  @ManyToOne(() => TripEntity, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => TripEntity, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   trip: TripEntity;
 
   @OneToMany(() => MessageEntity, (message) => message.conversation)

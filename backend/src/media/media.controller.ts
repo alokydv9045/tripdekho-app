@@ -45,16 +45,18 @@ export class MediaController {
       );
     }
 
-    const folder = type === 'routeMap'
-      ? 'tripdekho/trips/route-maps'
-      : 'tripdekho/trips/thumbnails';
+    const folder =
+      type === 'routeMap'
+        ? 'tripdekho/trips/route-maps'
+        : 'tripdekho/trips/thumbnails';
 
     const result = await this.storageService.uploadImage(file, {
       folder,
       maxFileSize: 10 * 1024 * 1024,
-      transformation: type === 'routeMap'
-        ? { width: 1200, height: 800, crop: 'limit' }
-        : { width: 800, height: 600, crop: 'limit' },
+      transformation:
+        type === 'routeMap'
+          ? { width: 1200, height: 800, crop: 'limit' }
+          : { width: 800, height: 600, crop: 'limit' },
     });
 
     return {

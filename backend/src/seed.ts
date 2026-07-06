@@ -34,7 +34,12 @@ import { ReferralCodeEntity } from './entities/referral-code.entity';
 import { ReferralEntity } from './entities/referral.entity';
 import { LoyaltyPointEntity } from './entities/loyalty-point.entity';
 import { PointTransactionEntity } from './entities/point-transaction.entity';
-import { RewardRuleEntity, RewardTrigger, RecipientType, TargetUserType } from './entities/reward-rule.entity';
+import {
+  RewardRuleEntity,
+  RewardTrigger,
+  RecipientType,
+  TargetUserType,
+} from './entities/reward-rule.entity';
 import { RewardRedemptionEntity } from './entities/reward-redemption.entity';
 
 const DATABASE_URL =
@@ -70,7 +75,9 @@ const AppDataSource = new DataSource({
     RewardRedemptionEntity,
   ],
   synchronize: true,
-  ...(process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {}),
+  ...(process.env.DB_SSL === 'true'
+    ? { ssl: { rejectUnauthorized: false } }
+    : {}),
 });
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -826,20 +833,60 @@ async function seed() {
       const totalSeats = randInt(15, 30);
       const bookedSeats = randInt(0, Math.floor(totalSeats * 0.7));
       datesToSave.push({
-        trip, startDate, endDate, price: basePrice + randInt(-500, 500),
-        totalSeats, availableSeats: totalSeats - bookedSeats, bookedSeats, status: DateStatus.AVAILABLE,
+        trip,
+        startDate,
+        endDate,
+        price: basePrice + randInt(-500, 500),
+        totalSeats,
+        availableSeats: totalSeats - bookedSeats,
+        bookedSeats,
+        status: DateStatus.AVAILABLE,
       });
     }
 
     const itinerariesToSave = [];
     for (let day = 1; day <= days; day++) {
       itinerariesToSave.push({
-        trip, dayNumber: day,
-        title: day === 1 ? `Arrival & Welcome at ${city.city}` : day === days ? 'Departure Day' : `Day ${day} – Exploration & Activities`,
-        description: day === 1 ? `Arrive at ${city.city}. Check-in and welcome briefing. Evening orientation walk.` : day === days ? `Post breakfast checkout and departure. Transfer to ${city.city} bus stand/railway station.` : `Full day of activities including sightseeing, local cuisine tasting, and cultural experiences around ${city.city}.`,
-        accommodation: day < days ? rand(['Hotel', 'Camp', 'Homestay', 'Resort', 'Guest House']) : null,
+        trip,
+        dayNumber: day,
+        title:
+          day === 1
+            ? `Arrival & Welcome at ${city.city}`
+            : day === days
+              ? 'Departure Day'
+              : `Day ${day} – Exploration & Activities`,
+        description:
+          day === 1
+            ? `Arrive at ${city.city}. Check-in and welcome briefing. Evening orientation walk.`
+            : day === days
+              ? `Post breakfast checkout and departure. Transfer to ${city.city} bus stand/railway station.`
+              : `Full day of activities including sightseeing, local cuisine tasting, and cultural experiences around ${city.city}.`,
+        accommodation:
+          day < days
+            ? rand(['Hotel', 'Camp', 'Homestay', 'Resort', 'Guest House'])
+            : null,
         meals: { breakfast: true, lunch: day !== days, dinner: day !== days },
-        activities: [{ title: day === 1 ? 'Check-in' : 'Morning Activity', time: '09:00 AM', description: 'Start your day with an energizing activity' }, { title: 'Lunch Break', time: '01:00 PM', description: 'Enjoy local cuisine' }, ...(day !== days ? [{ title: 'Evening Activity', time: '04:00 PM', description: 'Explore the surroundings' }] : [])],
+        activities: [
+          {
+            title: day === 1 ? 'Check-in' : 'Morning Activity',
+            time: '09:00 AM',
+            description: 'Start your day with an energizing activity',
+          },
+          {
+            title: 'Lunch Break',
+            time: '01:00 PM',
+            description: 'Enjoy local cuisine',
+          },
+          ...(day !== days
+            ? [
+                {
+                  title: 'Evening Activity',
+                  time: '04:00 PM',
+                  description: 'Explore the surroundings',
+                },
+              ]
+            : []),
+        ],
       });
     }
 
@@ -847,17 +894,42 @@ async function seed() {
     const numImages = randInt(2, 3);
     for (let m = 0; m < numImages; m++) {
       mediaToSave.push({
-        trip, url: unsplashImages[(i * 3 + m) % unsplashImages.length],
-        publicId: `trip_${i}_img_${m}`, caption: m === 0 ? template.title : `${city.city} scenic view`, isPrimary: m === 0, type: MediaType.IMAGE,
+        trip,
+        url: unsplashImages[(i * 3 + m) % unsplashImages.length],
+        publicId: `trip_${i}_img_${m}`,
+        caption: m === 0 ? template.title : `${city.city} scenic view`,
+        isPrimary: m === 0,
+        type: MediaType.IMAGE,
       });
     }
 
     await Promise.all([
-      locationRepo.save({ trip, city: city.city, state: city.state, country: 'India', address: `${city.city}, ${city.state}, India`, lat: city.lat + (Math.random() - 0.5) * 0.1, lng: city.lng + (Math.random() - 0.5) * 0.1, startLocation: `${city.city} Bus Stand`, endLocation: `${city.city} Bus Stand`, pickupLocations: [`${city.city} Railway Station`, `${city.city} Bus Stand`, `${city.city} Airport`] }),
-      priceRepo.save({ trip, amount: basePrice, currency: 'INR', originalPrice: Math.round(basePrice * 1.25), priceType: PriceType.PER_PERSON }),
+      locationRepo.save({
+        trip,
+        city: city.city,
+        state: city.state,
+        country: 'India',
+        address: `${city.city}, ${city.state}, India`,
+        lat: city.lat + (Math.random() - 0.5) * 0.1,
+        lng: city.lng + (Math.random() - 0.5) * 0.1,
+        startLocation: `${city.city} Bus Stand`,
+        endLocation: `${city.city} Bus Stand`,
+        pickupLocations: [
+          `${city.city} Railway Station`,
+          `${city.city} Bus Stand`,
+          `${city.city} Airport`,
+        ],
+      }),
+      priceRepo.save({
+        trip,
+        amount: basePrice,
+        currency: 'INR',
+        originalPrice: Math.round(basePrice * 1.25),
+        priceType: PriceType.PER_PERSON,
+      }),
       dateRepo.save(datesToSave),
       itineraryRepo.save(itinerariesToSave),
-      mediaRepo.save(mediaToSave)
+      mediaRepo.save(mediaToSave),
     ]);
 
     allTrips.push(trip);

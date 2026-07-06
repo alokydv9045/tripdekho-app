@@ -154,30 +154,45 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION != '' && secrets.AWS_REGION || 'us-east-1' }}
+      HAS_AWS_DEPLOY_SECRETS: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+      HAS_SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL != '' || secrets.SLACK_WEBHOOK != '' }}
     
     steps:
     - uses: actions/checkout@v4
     
     - name: Configure AWS credentials
+      if: env.HAS_AWS_DEPLOY_SECRETS == 'true'
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ env.AWS_REGION }}
     
     - name: Deploy to ECS
+      if: env.HAS_AWS_DEPLOY_SECRETS == 'true'
       run: |
         echo "Deploying to production..."
         # Add your deployment commands here
         # Example: aws ecs update-service --cluster TripDekho-cluster --service TripDekho-backend --force-new-deployment
     
+    - name: Skip deploy when AWS secrets are missing
+      if: env.HAS_AWS_DEPLOY_SECRETS != 'true'
+      run: echo "AWS deploy secrets are not configured; skipping deploy step."
+    
     - name: Notify Slack
+      if: always() && env.HAS_SLACK_WEBHOOK == 'true'
       uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
         text: 'Deployment completed!'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-      if: always()
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL || secrets.SLACK_WEBHOOK }}
+
+    - name: Skip Slack notification when webhook is missing
+      if: always() && env.HAS_SLACK_WEBHOOK != 'true'
+      run: echo "Slack webhook secret is not configured; skipping Slack notification."
 
   # Security Scan
   security-scan:

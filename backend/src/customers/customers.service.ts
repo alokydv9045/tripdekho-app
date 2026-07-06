@@ -27,7 +27,7 @@ export class CustomersService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     delete data.id; // Prevent updating PK
-    
+
     // Remove undefined properties from data so we don't accidentally overwrite with undefined
     const updateData = Object.entries(data).reduce((acc, [key, value]) => {
       if (value !== undefined) acc[key] = value;
