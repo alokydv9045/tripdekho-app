@@ -5,6 +5,7 @@ import 'trip_card.dart';
 import 'section_header.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/trip_provider.dart';
+import 'package:intl/intl.dart';
 
 class TripCategorySection extends ConsumerWidget {
   final String title;
@@ -69,16 +70,20 @@ class TripCategorySection extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: SizedBox(
-                        width: 320,
+                        width: 270,
                         child: TripCard(
                           title: trip.title,
                           location: '${trip.location.city}, ${trip.location.country}',
                           price: trip.price.amount.toDouble(),
+                          originalPrice: trip.price.originalPrice?.toDouble(),
                           duration: '${trip.durationNights}n ${trip.durationDays}d',
                           rating: 4.8,
                           reviewsCount: 120,
                           imageUrl: trip.thumbnail?.url ??
                               'assets/images/trips/ladakh.png',
+                          slug: trip.slug ?? trip.id,
+                          categories: trip.category,
+                          dates: trip.dates?.map((d) => DateFormat('MMM d').format(d.startDate)).toList(),
                           onTap: () => context.push('/trips/${trip.slug ?? trip.id}'),
                         ),
                       ),

@@ -12,6 +12,11 @@ class TripCard extends StatefulWidget {
   final double rating;
   final int reviewsCount;
   final String imageUrl;
+  final String? slug;
+  final List<String>? categories;
+  final List<String>? dates;
+  final String? vendorName;
+  final String? vendorAvatar;
   final VoidCallback onTap;
 
   const TripCard({
@@ -24,6 +29,11 @@ class TripCard extends StatefulWidget {
     required this.rating,
     required this.reviewsCount,
     required this.imageUrl,
+    this.slug,
+    this.categories,
+    this.dates,
+    this.vendorName,
+    this.vendorAvatar,
     required this.onTap,
   });
 
@@ -140,7 +150,7 @@ class _TripCardState extends State<TripCard> {
                       const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey500),
                       const SizedBox(width: 6),
                       Text(
-                        '2 nights / 3 days', // hardcoded to match image for visual perfection
+                        widget.duration,
                         style: GoogleFonts.plusJakartaSans(
                           color: AppColors.surfaceVariantText,
                           fontSize: 13,
@@ -153,7 +163,7 @@ class _TripCardState extends State<TripCard> {
 
                   // Title
                   Text(
-                    'Manali Solang Sissu', // hardcoded to match image
+                    widget.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.plusJakartaSans(
@@ -171,7 +181,7 @@ class _TripCardState extends State<TripCard> {
                       const Icon(Icons.location_on_outlined, size: 16, color: AppColors.amber500),
                       const SizedBox(width: 4),
                       Text(
-                        'manali',
+                        widget.location,
                         style: GoogleFonts.plusJakartaSans(
                           color: AppColors.amber500,
                           fontSize: 14,
@@ -183,22 +193,25 @@ class _TripCardState extends State<TripCard> {
                   const SizedBox(height: 16),
 
                   // Category Badges
-                  Row(
-                    children: [
-                      _Badge(text: 'ADVENTURE', textColor: const Color(0xFFD97706), bgColor: const Color(0xFFFEF3C7)),
-                      const SizedBox(width: 8),
-                      _Badge(text: 'MOUNTAIN', textColor: const Color(0xFF92400E), bgColor: const Color(0xFFFEF3C7)),
-                      const SizedBox(width: 8),
-                      _Badge(text: 'EASY', textColor: const Color(0xFF1D4ED8), bgColor: const Color(0xFFDBEAFE)),
-                    ],
-                  ),
+                  if (widget.categories != null && widget.categories!.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: widget.categories!.take(3).map((cat) {
+                        return _Badge(
+                          text: cat.toUpperCase(),
+                          textColor: const Color(0xFFD97706),
+                          bgColor: const Color(0xFFFEF3C7),
+                        );
+                      }).toList(),
+                    ),
                   const SizedBox(height: 16),
 
                   // Price
                   Row(
                     children: [
                       Text(
-                        '₹6,300',
+                        '₹${widget.price.toStringAsFixed(0)}',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -206,43 +219,50 @@ class _TripCardState extends State<TripCard> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '₹6,300',
-                        style: GoogleFonts.plusJakartaSans(
-                          decoration: TextDecoration.lineThrough,
-                          color: AppColors.grey400,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                      if (widget.originalPrice != null && widget.originalPrice! > widget.price) ...[
+                        Text(
+                          '₹${widget.originalPrice!.toStringAsFixed(0)}',
+                          style: GoogleFonts.plusJakartaSans(
+                            decoration: TextDecoration.lineThrough,
+                            color: AppColors.grey400,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '₹0 Off',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: const Color(0xFFEA580C), // Orange-red
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                        const SizedBox(width: 8),
+                        Text(
+                          '₹${(widget.originalPrice! - widget.price).toStringAsFixed(0)} Off',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: const Color(0xFFEA580C), // Orange-red
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
+                      ]
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  
                   // Upcoming Dates
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey500),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Jun 26, Jul 10, Jul 3', 
-                        style: GoogleFonts.plusJakartaSans(
-                          color: AppColors.surfaceVariantText,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                  if (widget.dates != null && widget.dates!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey500),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            widget.dates!.take(3).join(', '),
+                            style: GoogleFonts.plusJakartaSans(
+                              color: AppColors.surfaceVariantText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                   
                   const SizedBox(height: 20),
                   Container(height: 1, color: AppColors.outlineVariant.withAlpha(70)),
@@ -255,28 +275,38 @@ class _TripCardState extends State<TripCard> {
                       Container(
                         width: 24,
                         height: 24,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: const AssetImage('assets/images/sm-logo.png'),
-                            fit: BoxFit.cover,
-                          )
+                          color: AppColors.surfaceLow,
+                          image: (widget.vendorAvatar != null && widget.vendorAvatar!.startsWith('http')) 
+                            ? DecorationImage(
+                                image: CachedNetworkImageProvider(widget.vendorAvatar!),
+                                fit: BoxFit.cover,
+                              )
+                            : const DecorationImage(
+                                image: AssetImage('assets/images/sm-logo.png'),
+                                fit: BoxFit.cover,
+                              )
                         ),
                       ),
                       const SizedBox(width: 8),
-                      RichText(
-                        text: TextSpan(
-                          text: 'By ',
-                          style: GoogleFonts.plusJakartaSans(color: AppColors.grey500, fontSize: 13, fontWeight: FontWeight.w500),
-                          children: [
-                            TextSpan(
-                              text: 'Official Partner',
-                              style: GoogleFonts.plusJakartaSans(color: AppColors.darkText, fontWeight: FontWeight.w700),
-                            )
-                          ]
+                      Expanded(
+                        child: RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            text: 'By ',
+                            style: GoogleFonts.plusJakartaSans(color: AppColors.grey500, fontSize: 13, fontWeight: FontWeight.w500),
+                            children: [
+                              TextSpan(
+                                text: widget.vendorName ?? 'TripDekho',
+                                style: GoogleFonts.plusJakartaSans(color: AppColors.darkText, fontWeight: FontWeight.w700),
+                              )
+                            ]
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 4),
                       // New Badge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
