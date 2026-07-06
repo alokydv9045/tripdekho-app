@@ -19,9 +19,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       appBar: AppBar(
         title: Row(
           children: [
+            const SizedBox(width: 8),
             const CircleAvatar(
-              radius: 16,
-              backgroundImage: NetworkImage('https://res.cloudinary.com/dphw0c5r5/image/upload/v1719665671/india-hero_xkf3c8.jpg'), // placeholder
+              backgroundImage: AssetImage('assets/images/ui/aman-founder.png'), // placeholder
             ),
             const SizedBox(width: 12),
             Column(

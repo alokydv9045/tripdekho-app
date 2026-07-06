@@ -433,14 +433,15 @@ const Header = () => {
                 />
               </div>
             ) : (
-              <button onClick={() => dispatch(openAuthModal('login'))} className="ml-2">
+              <div className="ml-2">
                 <AnimatedButton 
+                  onClick={() => dispatch(openAuthModal('login'))}
                   className="px-8 py-2.5 bg-gold-primary hover:bg-black hover:text-white text-black font-black text-xs uppercase tracking-widest rounded-full transition-colors duration-300 shadow-button group flex items-center gap-2"
                 >
                   Login
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </AnimatedButton>
-              </button>
+              </div>
             )}
           </nav>
 

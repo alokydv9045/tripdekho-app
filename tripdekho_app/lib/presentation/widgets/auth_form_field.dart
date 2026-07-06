@@ -7,6 +7,7 @@ class AuthFormField extends StatelessWidget {
   final TextEditingController controller;
   final bool isPassword;
   final TextInputType keyboardType;
+  final int maxLines;
   final String? Function(String?)? validator;
 
   const AuthFormField({
@@ -16,6 +17,7 @@ class AuthFormField extends StatelessWidget {
     required this.controller,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
+    this.maxLines = 1,
     this.validator,
   });
 
@@ -37,6 +39,7 @@ class AuthFormField extends StatelessWidget {
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
+          maxLines: maxLines,
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,

@@ -2,13 +2,27 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'trip_model.g.dart';
 
+num _parseNum(dynamic value) {
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value) ?? 0;
+  return 0;
+}
+
+num? _parseNumNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value);
+  return null;
+}
+
 @JsonSerializable()
 class TripModel {
   final String id;
+  final String? slug;
   final String title;
   final String? shortDescription;
   final String? description;
-  final List<String> category;
+  final List<String>? category;
   final String? difficulty;
   final int durationDays;
   final int durationNights;
@@ -23,10 +37,11 @@ class TripModel {
 
   TripModel({
     required this.id,
+    this.slug,
     required this.title,
     this.shortDescription,
     this.description,
-    required this.category,
+    this.category,
     this.difficulty,
     required this.durationDays,
     required this.durationNights,
@@ -62,8 +77,10 @@ class TripLocationModel {
 
 @JsonSerializable()
 class TripPriceModel {
+  @JsonKey(fromJson: _parseNum)
   final num amount;
   final String? currency;
+  @JsonKey(fromJson: _parseNumNullable)
   final num? originalPrice;
 
   TripPriceModel({
@@ -81,6 +98,7 @@ class TripDateModel {
   final String id;
   final DateTime startDate;
   final DateTime endDate;
+  @JsonKey(fromJson: _parseNum)
   final num price;
   final int totalSeats;
 

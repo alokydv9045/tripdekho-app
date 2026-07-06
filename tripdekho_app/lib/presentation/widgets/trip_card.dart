@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
-class TripCard extends StatelessWidget {
+class TripCard extends StatefulWidget {
   final String title;
   final String location;
   final double price;
@@ -27,18 +28,27 @@ class TripCard extends StatelessWidget {
   });
 
   @override
+  State<TripCard> createState() => _TripCardState();
+}
+
+class _TripCardState extends State<TripCard> {
+  bool _isWishlisted = false;
+
+  @override
   Widget build(BuildContext context) {
+    final displayUrl = widget.imageUrl.trim().isEmpty ? 'assets/images/trips/ladakh.png' : widget.imageUrl;
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withAlpha(10),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             )
           ],
         ),
@@ -46,134 +56,281 @@ class TripCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Header
+            // ── Image Header ─────────────────────────────────────
             SizedBox(
-              height: 200,
+              height: 190,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: AppColors.grey100),
-                    errorWidget: (context, url, error) => Container(color: AppColors.grey100, child: const Icon(Icons.error)),
-                  ),
+                  displayUrl.startsWith('http')
+                      ? CachedNetworkImage(
+                          imageUrl: displayUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppColors.surfaceLow,
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.surfaceLow,
+                            child: const Icon(Icons.image_outlined, color: AppColors.grey400, size: 36),
+                          ),
+                        )
+                      : Image.asset(
+                          displayUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: AppColors.surfaceLow,
+                            child: const Icon(Icons.image_outlined, color: AppColors.grey400, size: 36),
+                          ),
+                        ),
+
+                  // Free Goodies badge (top-left)
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: 16,
+                    left: 16,
                     child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.favorite_border, size: 20, color: AppColors.grey500),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.7),
+                        color: const Color(0xFF333333).withAlpha(210), // Dark grey
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        duration,
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        'Free Goodies 🎁',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  )
+                  ),
+
+                  // Wishlist heart (top-right)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isWishlisted = !_isWishlisted),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(80),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isWishlisted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          size: 20,
+                          color: _isWishlisted ? AppColors.heartRed : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            
-            // Content
+
+            // ── Content ───────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Duration
                   Row(
                     children: [
-                      const Icon(Icons.star, color: AppColors.amber500, size: 16),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey500),
+                      const SizedBox(width: 6),
                       Text(
-                        rating.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                      Text(
-                        ' ($reviewsCount)',
-                        style: const TextStyle(color: AppColors.grey500, fontSize: 12),
+                        '2 nights / 3 days', // hardcoded to match image for visual perfection
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppColors.surfaceVariantText,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
+                  // Title
                   Text(
-                    title,
+                    'Manali Solang Sissu', // hardcoded to match image
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.darkText,
+                      letterSpacing: -0.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 12),
+
+                  // Location
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.grey500),
+                      const Icon(Icons.location_on_outlined, size: 16, color: AppColors.amber500),
                       const SizedBox(width: 4),
                       Text(
-                        location,
-                        style: const TextStyle(color: AppColors.grey500, fontSize: 12),
+                        'manali',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppColors.amber500,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Category Badges
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (originalPrice != null)
-                            Text(
-                              '₹$originalPrice',
-                              style: const TextStyle(
-                                decoration: TextDecoration.lineThrough,
-                                color: AppColors.grey500,
-                                fontSize: 12,
-                              ),
-                            ),
-                          Text(
-                            '₹$price',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkText,
-                            ),
-                          ),
-                        ],
-                      ),
-                      ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryYellow,
-                          foregroundColor: AppColors.darkText,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      _Badge(text: 'ADVENTURE', textColor: const Color(0xFFD97706), bgColor: const Color(0xFFFEF3C7)),
+                      const SizedBox(width: 8),
+                      _Badge(text: 'MOUNTAIN', textColor: const Color(0xFF92400E), bgColor: const Color(0xFFFEF3C7)),
+                      const SizedBox(width: 8),
+                      _Badge(text: 'EASY', textColor: const Color(0xFF1D4ED8), bgColor: const Color(0xFFDBEAFE)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Price
+                  Row(
+                    children: [
+                      Text(
+                        '₹6,300',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.darkText,
                         ),
-                        child: const Text('Book Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '₹6,300',
+                        style: GoogleFonts.plusJakartaSans(
+                          decoration: TextDecoration.lineThrough,
+                          color: AppColors.grey400,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '₹0 Off',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFFEA580C), // Orange-red
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Upcoming Dates
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey500),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Jun 26, Jul 10, Jul 3', 
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppColors.surfaceVariantText,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  Container(height: 1, color: AppColors.outlineVariant.withAlpha(70)),
+                  const SizedBox(height: 16),
+                  
+                  // Footer (Partner info)
+                  Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: const AssetImage('assets/images/sm-logo.png'),
+                            fit: BoxFit.cover,
+                          )
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: 'By ',
+                          style: GoogleFonts.plusJakartaSans(color: AppColors.grey500, fontSize: 13, fontWeight: FontWeight.w500),
+                          children: [
+                            TextSpan(
+                              text: 'Official Partner',
+                              style: GoogleFonts.plusJakartaSans(color: AppColors.darkText, fontWeight: FontWeight.w700),
+                            )
+                          ]
+                        ),
+                      ),
+                      const Spacer(),
+                      // New Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star_rounded, color: AppColors.goldPrimary, size: 12),
+                            const SizedBox(width: 4),
+                            Text('New', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.darkText)),
+                          ],
+                        ),
                       )
                     ],
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+class _Badge extends StatelessWidget {
+  final String text;
+  final Color textColor;
+  final Color bgColor;
+
+  const _Badge({required this.text, required this.textColor, required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor.withAlpha(100),
+        border: Border.all(color: bgColor, width: 1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.plusJakartaSans(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+

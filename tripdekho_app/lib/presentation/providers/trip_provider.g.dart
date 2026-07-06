@@ -6,7 +6,7 @@ part of 'trip_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tripRepositoryHash() => r'306227f7d1659a57d5bbc49d109f967a2dbfd9df';
+String _$tripRepositoryHash() => r'12d4005004e602166fcc49c210f2e98c0d777766';
 
 /// See also [tripRepository].
 @ProviderFor(tripRepository)
@@ -23,7 +23,7 @@ final tripRepositoryProvider = AutoDisposeProvider<TripRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TripRepositoryRef = AutoDisposeProviderRef<TripRepository>;
-String _$fetchTripsHash() => r'997be27f553490cc9f052c7dda5f3460dcc89f65';
+String _$fetchTripsHash() => r'709e052584b699b29f662fdb51e8ed800d217ab6';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -56,15 +56,30 @@ class FetchTripsFamily extends Family<AsyncValue<List<TripModel>>> {
   const FetchTripsFamily();
 
   /// See also [fetchTrips].
-  FetchTripsProvider call({String? category, String? search}) {
-    return FetchTripsProvider(category: category, search: search);
+  FetchTripsProvider call({
+    String? category,
+    String? search,
+    String? tags,
+    int limit = 10,
+  }) {
+    return FetchTripsProvider(
+      category: category,
+      search: search,
+      tags: tags,
+      limit: limit,
+    );
   }
 
   @override
   FetchTripsProvider getProviderOverride(
     covariant FetchTripsProvider provider,
   ) {
-    return call(category: provider.category, search: provider.search);
+    return call(
+      category: provider.category,
+      search: provider.search,
+      tags: provider.tags,
+      limit: provider.limit,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -85,23 +100,31 @@ class FetchTripsFamily extends Family<AsyncValue<List<TripModel>>> {
 /// See also [fetchTrips].
 class FetchTripsProvider extends AutoDisposeFutureProvider<List<TripModel>> {
   /// See also [fetchTrips].
-  FetchTripsProvider({String? category, String? search})
-    : this._internal(
-        (ref) => fetchTrips(
-          ref as FetchTripsRef,
-          category: category,
-          search: search,
-        ),
-        from: fetchTripsProvider,
-        name: r'fetchTripsProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$fetchTripsHash,
-        dependencies: FetchTripsFamily._dependencies,
-        allTransitiveDependencies: FetchTripsFamily._allTransitiveDependencies,
-        category: category,
-        search: search,
-      );
+  FetchTripsProvider({
+    String? category,
+    String? search,
+    String? tags,
+    int limit = 10,
+  }) : this._internal(
+         (ref) => fetchTrips(
+           ref as FetchTripsRef,
+           category: category,
+           search: search,
+           tags: tags,
+           limit: limit,
+         ),
+         from: fetchTripsProvider,
+         name: r'fetchTripsProvider',
+         debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+             ? null
+             : _$fetchTripsHash,
+         dependencies: FetchTripsFamily._dependencies,
+         allTransitiveDependencies: FetchTripsFamily._allTransitiveDependencies,
+         category: category,
+         search: search,
+         tags: tags,
+         limit: limit,
+       );
 
   FetchTripsProvider._internal(
     super._createNotifier, {
@@ -112,10 +135,14 @@ class FetchTripsProvider extends AutoDisposeFutureProvider<List<TripModel>> {
     required super.from,
     required this.category,
     required this.search,
+    required this.tags,
+    required this.limit,
   }) : super.internal();
 
   final String? category;
   final String? search;
+  final String? tags;
+  final int limit;
 
   @override
   Override overrideWith(
@@ -132,6 +159,8 @@ class FetchTripsProvider extends AutoDisposeFutureProvider<List<TripModel>> {
         debugGetCreateSourceHash: null,
         category: category,
         search: search,
+        tags: tags,
+        limit: limit,
       ),
     );
   }
@@ -145,7 +174,9 @@ class FetchTripsProvider extends AutoDisposeFutureProvider<List<TripModel>> {
   bool operator ==(Object other) {
     return other is FetchTripsProvider &&
         other.category == category &&
-        other.search == search;
+        other.search == search &&
+        other.tags == tags &&
+        other.limit == limit;
   }
 
   @override
@@ -153,6 +184,8 @@ class FetchTripsProvider extends AutoDisposeFutureProvider<List<TripModel>> {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
     hash = _SystemHash.combine(hash, category.hashCode);
     hash = _SystemHash.combine(hash, search.hashCode);
+    hash = _SystemHash.combine(hash, tags.hashCode);
+    hash = _SystemHash.combine(hash, limit.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -166,6 +199,12 @@ mixin FetchTripsRef on AutoDisposeFutureProviderRef<List<TripModel>> {
 
   /// The parameter `search` of this provider.
   String? get search;
+
+  /// The parameter `tags` of this provider.
+  String? get tags;
+
+  /// The parameter `limit` of this provider.
+  int get limit;
 }
 
 class _FetchTripsProviderElement
@@ -177,6 +216,10 @@ class _FetchTripsProviderElement
   String? get category => (origin as FetchTripsProvider).category;
   @override
   String? get search => (origin as FetchTripsProvider).search;
+  @override
+  String? get tags => (origin as FetchTripsProvider).tags;
+  @override
+  int get limit => (origin as FetchTripsProvider).limit;
 }
 
 String _$fetchTripDetailHash() => r'ff5e0b5cfc7b65beb55405755f68e69d30d7ddbd';

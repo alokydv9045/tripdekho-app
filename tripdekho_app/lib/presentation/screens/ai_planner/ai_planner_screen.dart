@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 class AiPlannerScreen extends StatefulWidget {
@@ -10,150 +11,257 @@ class AiPlannerScreen extends StatefulWidget {
 
 class _AiPlannerScreenState extends State<AiPlannerScreen> {
   final _destinationCtrl = TextEditingController();
-  double _duration = 3;
-  double _budget = 50000;
-  
-  final List<String> _interests = ['Adventure', 'Nature', 'Culture', 'Food', 'Relaxation', 'Wildlife'];
-  final Set<String> _selectedInterests = {};
-  
-  String _travelStyle = 'Family';
-  final List<String> _styles = ['Solo', 'Couple', 'Family', 'Group'];
+  final _durationCtrl = TextEditingController(text: '3');
+  String _budget = 'moderate';
+  final _interestsCtrl = TextEditingController();
 
   bool _isGenerating = false;
+  List<Map<String, dynamic>>? _itinerary;
 
   void _generate() async {
     setState(() => _isGenerating = true);
     // Simulate AI API call
     await Future.delayed(const Duration(seconds: 3));
-    setState(() => _isGenerating = false);
-    
-    // In a real app, this would show the generated itinerary, probably via a bottom sheet or new screen
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Itinerary generated successfully!'), backgroundColor: Colors.green),
-      );
-    }
+    setState(() {
+      _isGenerating = false;
+      _itinerary = [
+        {
+          'day': 1,
+          'title': 'Arrival & City Tour',
+          'activities': [
+            'Arrive at airport and check-in to hotel',
+            'Lunch at a local cafe',
+            'Evening stroll and dinner',
+          ]
+        },
+        {
+          'day': 2,
+          'title': 'Adventure & Exploration',
+          'activities': [
+            'Morning hiking expedition',
+            'Visit local historical sites',
+            'Sunset viewing point',
+          ]
+        }
+      ];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgCream,
+      backgroundColor: const Color(0xFF0F172A), // Dark slate background matching web's gray-900
       appBar: AppBar(
-        title: const Text('AI Trip Planner', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text(
+          'TripDekho AI', 
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800, 
+            color: Colors.white,
+            letterSpacing: -0.5
+          )
+        ),
+        backgroundColor: const Color(0xFF0F172A),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Where do you want to go?', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _destinationCtrl,
-              decoration: InputDecoration(
-                hintText: 'e.g., Bali, Switzerland, Kerala...',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                prefixIcon: const Icon(Icons.location_on, color: AppColors.grey500),
+            // Header
+            Text(
+              'AI Trip Planner',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -1.0,
               ),
             ),
-            const SizedBox(height: 24),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Duration', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('${_duration.toInt()} Days', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryYellow)),
-              ],
-            ),
-            Slider(
-              value: _duration,
-              min: 1,
-              max: 14,
-              divisions: 13,
-              activeColor: AppColors.primaryYellow,
-              onChanged: (val) => setState(() => _duration = val),
-            ),
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Budget', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('₹${_budget.toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), ',')}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryYellow)),
-              ],
-            ),
-            Slider(
-              value: _budget,
-              min: 5000,
-              max: 200000,
-              divisions: 39, // steps of 5000
-              activeColor: AppColors.primaryYellow,
-              onChanged: (val) => setState(() => _budget = val),
-            ),
-            const SizedBox(height: 24),
-
-            const Text('Interests', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _interests.map((interest) {
-                final isSelected = _selectedInterests.contains(interest);
-                return FilterChip(
-                  label: Text(interest),
-                  selected: isSelected,
-                  selectedColor: AppColors.primaryYellow,
-                  checkmarkColor: AppColors.darkText,
-                  onSelected: (val) {
-                    setState(() {
-                      if (val) {
-                        _selectedInterests.add(interest);
-                      } else {
-                        _selectedInterests.remove(interest);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            const Text('Travel Style', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: _styles.map((style) {
-                final isSelected = _travelStyle == style;
-                return ChoiceChip(
-                  label: Text(style),
-                  selected: isSelected,
-                  selectedColor: AppColors.primaryYellow,
-                  onSelected: (val) {
-                    if (val) setState(() => _travelStyle = style);
-                  },
-                );
-              }).toList(),
+            Text(
+              'Describe your dream trip and let our AI generate a personalized itinerary.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: Colors.grey.shade400,
+              ),
             ),
             const SizedBox(height: 32),
 
-            ElevatedButton(
-              onPressed: _isGenerating ? null : _generate,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryYellow,
-                foregroundColor: AppColors.darkText,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            // Form Container
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(10), // bg-white/5 equivalent
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withAlpha(20)),
               ),
-              child: _isGenerating
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkText))
-                  : const Text('GENERATE ITINERARY', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel('Destination'),
+                  _buildTextField(_destinationCtrl, 'e.g. Paris, Tokyo, Bali'),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Duration (Days)'),
+                            _buildTextField(_durationCtrl, '3', isNumber: true),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Budget'),
+                            Container(
+                              height: 52,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(10),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white.withAlpha(20)),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _budget,
+                                  dropdownColor: const Color(0xFF1E293B),
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white),
+                                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600),
+                                  items: const [
+                                    DropdownMenuItem(value: 'budget', child: Text('Budget')),
+                                    DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
+                                    DropdownMenuItem(value: 'luxury', child: Text('Luxury')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) setState(() => _budget = val);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildLabel('Interests (comma separated)'),
+                  _buildTextField(_interestsCtrl, 'e.g. History, Food, Nightlife'),
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isGenerating ? null : _generate,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600, // web uses blue-600
+                        foregroundColor: Colors.white,
+                        elevation: 10,
+                        shadowColor: Colors.blue.shade500.withAlpha(80),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isGenerating
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text('Generate Itinerary', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 32),
+
+            // Results
+            if (_itinerary != null)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(10),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withAlpha(20)),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Your Custom Plan', style: GoogleFonts.plusJakartaSans(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.blue.shade400, letterSpacing: -0.5)),
+                    const SizedBox(height: 24),
+                    ..._itinerary!.map((day) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(left: BorderSide(color: Colors.blue.shade500, width: 2)),
+                          ),
+                          padding: const EdgeInsets.only(left: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Day ${day['day']}: ${day['title']}', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+                              const SizedBox(height: 12),
+                              ...List<Widget>.from(day['activities'].map((act) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 6, right: 8),
+                                      child: Icon(Icons.circle, size: 6, color: Colors.grey),
+                                    ),
+                                    Expanded(child: Text(act, style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade400, height: 1.5))),
+                                  ],
+                                ),
+                              ))),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 14),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false}) {
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.plusJakartaSans(color: Colors.white.withAlpha(100)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: InputBorder.none,
         ),
       ),
     );

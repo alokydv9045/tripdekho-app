@@ -56,7 +56,13 @@ const nextConfig = {
     // We use the public IP since Next.js evaluates this during docker build where host IPs can vary
     const isProd = process.env.NODE_ENV === 'production';
     const minioUrl = process.env.MINIO_INTERNAL_URL || (isProd ? 'http://93.127.194.87:9000' : 'http://localhost:9000');
+    const apiUrl = process.env.INTERNAL_API_URL || (isProd ? 'http://backend:3000' : 'http://127.0.0.1:3000');
     return [
+      {
+        // Proxy API requests to backend
+        source: '/api/v2/:path*',
+        destination: `${apiUrl}/api/v2/:path*`,
+      },
       {
         // Proxy /storage/tripdekho-media/... to MinIO
         source: '/storage/:path*',

@@ -1,115 +1,160 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BookingDetailScreen extends StatelessWidget {
+class BookingDetailScreen extends ConsumerWidget {
   final String bookingId;
   const BookingDetailScreen({super.key, required this.bookingId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.bgCream,
-      appBar: AppBar(
-        title: Text('Booking $bookingId'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.bgCream,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            pinned: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkText),
+              onPressed: () => context.pop(),
+            ),
+            title: Text('Booking Details', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.darkText, fontSize: 18, letterSpacing: -0.3)),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 32),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Booking Confirmed', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
-                      Text('Your trip is ready to go!', style: TextStyle(color: Colors.green)),
-                    ],
-                  )
+                  // Pass ID
+                  Text('PASS ID: #${bookingId.toUpperCase()}', style: GoogleFonts.spaceMono(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textMuted, letterSpacing: 2.0)),
+                  const SizedBox(height: 24),
+                  
+                  // Status Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Booking Confirmed', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.green.shade700, letterSpacing: -0.5)),
+                              const SizedBox(height: 4),
+                              Text('Your adventure awaits!', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.green.shade600)),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Trip Details
+                  Text('ADVENTURE SUMMARY', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 12, color: AppColors.textMuted, letterSpacing: 1.5)),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: Colors.grey.shade100),
+                      boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 20, offset: const Offset(0, 10))],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Himalayan Expedition', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 22, color: AppColors.darkText, letterSpacing: -0.5)),
+                        const SizedBox(height: 4),
+                        Text('Ladakh, India', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textMuted)),
+                        const SizedBox(height: 24),
+                        const Divider(color: AppColors.outlineVariant),
+                        const SizedBox(height: 24),
+                        _buildInfoRow(Icons.calendar_month_rounded, 'Travel Date', 'Oct 15, 2024'),
+                        const SizedBox(height: 16),
+                        _buildInfoRow(Icons.people_alt_rounded, 'Guests', '2 Adults'),
+                        const SizedBox(height: 16),
+                        _buildInfoRow(Icons.timer_rounded, 'Duration', '6 Days, 5 Nights'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Payment Summary
+                  Text('PAYMENT BREAKDOWN', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 12, color: AppColors.textMuted, letterSpacing: 1.5)),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: Colors.grey.shade100),
+                      boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 20, offset: const Offset(0, 10))],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        _buildPriceRow('Base Price', '₹30,000'),
+                        const SizedBox(height: 16),
+                        _buildPriceRow('Taxes & Fees', '₹1,500'),
+                        const SizedBox(height: 16),
+                        _buildPriceRow('Discount', '-₹1,500', isDiscount: true),
+                        const SizedBox(height: 24),
+                        const Divider(color: AppColors.outlineVariant),
+                        const SizedBox(height: 24),
+                        _buildPriceRow('Total Paid', '₹30,000', isTotal: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Actions
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.file_download_outlined, size: 20),
+                    label: Text('DOWNLOAD INVOICE', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.darkText,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      elevation: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+                    label: Text('CANCEL BOOKING', style: GoogleFonts.plusJakartaSans(color: Colors.red, fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            
-            // Trip Details
-            const Text('Trip Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 12),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Himalayan Adventure', style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Manali, Himachal Pradesh'),
-                      trailing: Text('4n 5d', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryYellow)),
-                    ),
-                    const Divider(),
-                    _buildInfoRow(Icons.calendar_today, 'Departure', 'Oct 15, 2024'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(Icons.people, 'Guests', '2 Adults'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Payment Details
-            const Text('Payment Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 12),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    _buildPriceRow('Base Price (2 Adults)', '₹30,000'),
-                    const SizedBox(height: 8),
-                    _buildPriceRow('Taxes & Fees', '₹1,500'),
-                    const SizedBox(height: 8),
-                    _buildPriceRow('Discount', '-₹1,500', isDiscount: true),
-                    const Divider(height: 24),
-                    _buildPriceRow('Total Amount', '₹30,000', isTotal: true),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Actions
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download),
-              label: const Text('DOWNLOAD INVOICE'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.darkText,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: AppColors.grey100)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.cancel_outlined, color: AppColors.redBadge),
-              label: const Text('Cancel Booking', style: TextStyle(color: AppColors.redBadge)),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
@@ -117,11 +162,20 @@ class BookingDetailScreen extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.grey500),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: AppColors.grey500)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, size: 18, color: AppColors.amber500),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label.toUpperCase(), style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.textMuted, letterSpacing: 1.0)),
+            const SizedBox(height: 4),
+            Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.darkText)),
+          ],
+        )
       ],
     );
   }
@@ -130,15 +184,24 @@ class BookingDetailScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(
-          color: isTotal ? AppColors.darkText : AppColors.grey500,
-          fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-        )),
-        Text(value, style: TextStyle(
-          color: isDiscount ? Colors.green : AppColors.darkText,
-          fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-          fontSize: isTotal ? 18 : 14,
-        )),
+        Text(
+          isTotal ? label.toUpperCase() : label, 
+          style: GoogleFonts.plusJakartaSans(
+            color: isTotal ? AppColors.darkText : AppColors.textMuted,
+            fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+            fontSize: isTotal ? 14 : 14,
+            letterSpacing: isTotal ? 1.5 : 0,
+          )
+        ),
+        Text(
+          value, 
+          style: GoogleFonts.plusJakartaSans(
+            color: isDiscount ? Colors.green.shade600 : AppColors.darkText,
+            fontWeight: FontWeight.w900,
+            fontSize: isTotal ? 24 : 16,
+            letterSpacing: isTotal ? -0.5 : 0,
+          )
+        ),
       ],
     );
   }

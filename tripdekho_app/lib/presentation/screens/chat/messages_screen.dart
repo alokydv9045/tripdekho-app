@@ -28,7 +28,7 @@ class MessagesScreen extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: const CircleAvatar(
                 radius: 24,
-                backgroundImage: NetworkImage('https://res.cloudinary.com/dphw0c5r5/image/upload/v1719665671/india-hero_xkf3c8.jpg'), // placeholder
+                backgroundImage: AssetImage('assets/images/ui/aman-founder.png'), // placeholder
               ),
               title: const Text('Himalayan Treks & Tours', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(

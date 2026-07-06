@@ -12,11 +12,11 @@ const getBrowserUrl = () => {
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/api/v2`;
   }
-  return 'http://127.0.0.1:5001/api/v2';
+  return 'http://127.0.0.1:3000/api/v2';
 };
 
 const BASE_URL = IS_SERVER 
-  ? process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || (process.env.DOCKER === 'true' ? 'http://backend:5001/api/v2' : 'http://127.0.0.1:5001/api/v2')
+  ? process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || (process.env.DOCKER === 'true' ? 'http://backend:3000/api/v2' : 'http://127.0.0.1:3000/api/v2')
   : getBrowserUrl(); // Always prioritize dynamic domain on the client side
 
 // Basic utility to extract CSRF token from cookies if we have it

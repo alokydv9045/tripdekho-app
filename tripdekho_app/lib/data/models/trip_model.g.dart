@@ -8,11 +8,12 @@ part of 'trip_model.dart';
 
 TripModel _$TripModelFromJson(Map<String, dynamic> json) => TripModel(
   id: json['id'] as String,
+  slug: json['slug'] as String?,
   title: json['title'] as String,
   shortDescription: json['shortDescription'] as String?,
   description: json['description'] as String?,
-  category: (json['category'] as List<dynamic>)
-      .map((e) => e as String)
+  category: (json['category'] as List<dynamic>?)
+      ?.map((e) => e as String)
       .toList(),
   difficulty: json['difficulty'] as String?,
   durationDays: (json['durationDays'] as num).toInt(),
@@ -43,6 +44,7 @@ TripModel _$TripModelFromJson(Map<String, dynamic> json) => TripModel(
 
 Map<String, dynamic> _$TripModelToJson(TripModel instance) => <String, dynamic>{
   'id': instance.id,
+  'slug': instance.slug,
   'title': instance.title,
   'shortDescription': instance.shortDescription,
   'description': instance.description,
@@ -76,9 +78,9 @@ Map<String, dynamic> _$TripLocationModelToJson(TripLocationModel instance) =>
 
 TripPriceModel _$TripPriceModelFromJson(Map<String, dynamic> json) =>
     TripPriceModel(
-      amount: json['amount'] as num,
+      amount: _parseNum(json['amount']),
       currency: json['currency'] as String?,
-      originalPrice: json['originalPrice'] as num?,
+      originalPrice: _parseNumNullable(json['originalPrice']),
     );
 
 Map<String, dynamic> _$TripPriceModelToJson(TripPriceModel instance) =>
@@ -93,7 +95,7 @@ TripDateModel _$TripDateModelFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: DateTime.parse(json['endDate'] as String),
-      price: json['price'] as num,
+      price: _parseNum(json['price']),
       totalSeats: (json['totalSeats'] as num).toInt(),
     );
 

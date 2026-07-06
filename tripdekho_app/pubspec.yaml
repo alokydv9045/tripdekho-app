@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.12.2
+  sdk: '>=3.11.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -83,6 +83,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/destinations/
+    - assets/images/trips/
+    - assets/images/ui/
     - assets/lottie/
 
 flutter_launcher_icons:

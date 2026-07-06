@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 class VendorBookingsScreen extends StatelessWidget {
@@ -7,21 +8,24 @@ class VendorBookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
-        backgroundColor: AppColors.bgCream,
+        backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
-          title: const Text('Customer Bookings', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text('Manage Bookings', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, color: AppColors.darkText, letterSpacing: -0.5)),
           backgroundColor: Colors.white,
           elevation: 0,
-          bottom: const TabBar(
-            isScrollable: true,
-            labelColor: AppColors.primaryYellow,
+          scrolledUnderElevation: 0,
+          iconTheme: const IconThemeData(color: AppColors.darkText),
+          bottom: TabBar(
+            labelColor: AppColors.amber500,
             unselectedLabelColor: AppColors.grey500,
-            indicatorColor: AppColors.primaryYellow,
-            tabs: [
-              Tab(text: 'Pending'),
-              Tab(text: 'Confirmed'),
+            indicatorColor: AppColors.amber500,
+            indicatorWeight: 3,
+            labelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14),
+            unselectedLabelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
+            tabs: const [
+              Tab(text: 'Upcoming'),
               Tab(text: 'Completed'),
               Tab(text: 'Cancelled'),
             ],
@@ -29,74 +33,108 @@ class VendorBookingsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildVendorBookingsList('pending'),
-            _buildVendorBookingsList('confirmed'),
-            _buildVendorBookingsList('completed'),
-            _buildVendorBookingsList('cancelled'),
+            _buildBookingsList('upcoming'),
+            _buildBookingsList('completed'),
+            _buildBookingsList('cancelled'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildVendorBookingsList(String status) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 2,
+  Widget _buildBookingsList(String status) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(24),
+      itemCount: status == 'upcoming' ? 3 : (status == 'completed' ? 5 : 1),
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('BK-100$index', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    _buildStatusBadge(status),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text('Customer: John Doe', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const Text('john@example.com | +91 9876543210', style: TextStyle(color: AppColors.grey500, fontSize: 12)),
-                const SizedBox(height: 12),
-                const Text('Himalayan Adventure', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryYellow)),
-                const Text('Oct 15, 2024 • 2 Guests', style: TextStyle(color: AppColors.grey500, fontSize: 12)),
-                const Divider(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Amount Paid', style: TextStyle(color: AppColors.grey500)),
-                    const Text('₹30,000', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
-                  ],
-                ),
-                if (status == 'pending') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
-                          child: const Text('REJECT'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                          child: const Text('CONFIRM'),
-                        ),
-                      )
-                    ],
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey.shade100),
+            boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 20, offset: const Offset(0, 10))],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8)),
+                    child: Text('ID: #BKG-${1000 + index}', style: GoogleFonts.spaceMono(fontWeight: FontWeight.w700, fontSize: 10, color: AppColors.textMuted)),
+                  ),
+                  _buildStatusBadge(status),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(color: AppColors.amber500.withAlpha(30), borderRadius: BorderRadius.circular(16)),
+                    alignment: Alignment.center,
+                    child: Text('JD', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, color: AppColors.amber500)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('John Doe', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.darkText)),
+                        const SizedBox(height: 2),
+                        Text('john.doe@example.com • +91 9876543210', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
+                      ],
+                    ),
                   )
-                ]
-              ],
-            ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: AppColors.outlineVariant),
+              ),
+              Text('Ladakh Expedition (5N/6D)', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.darkText)),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Icons.calendar_month_rounded, size: 14, color: AppColors.grey500),
+                  const SizedBox(width: 4),
+                  Text('Oct 15 - Oct 20, 2024', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.grey500)),
+                  const SizedBox(width: 16),
+                  Icon(Icons.people_alt_rounded, size: 14, color: AppColors.grey500),
+                  const SizedBox(width: 4),
+                  Text('2 Guests', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.grey500)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('TOTAL AMOUNT', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 8, color: AppColors.textMuted, letterSpacing: 1.5)),
+                      Text('₹45,000', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.green.shade700)),
+                    ],
+                  ),
+                  if (status == 'upcoming')
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.darkText,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        elevation: 0,
+                      ),
+                      child: Text('View Details', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12)),
+                    )
+                ],
+              )
+            ],
           ),
         );
       },
@@ -104,24 +142,37 @@ class VendorBookingsScreen extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(String status) {
-    Color color;
+    Color bgColor;
+    Color textColor;
+    String label;
+
     switch (status) {
-      case 'confirmed':
-        color = Colors.green;
+      case 'upcoming':
+        bgColor = AppColors.amber500.withAlpha(30);
+        textColor = AppColors.amber500;
+        label = 'UPCOMING';
         break;
-      case 'pending':
-        color = Colors.orange;
-        break;
-      case 'cancelled':
-        color = Colors.red;
+      case 'completed':
+        bgColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        label = 'COMPLETED';
         break;
       default:
-        color = AppColors.grey500;
+        bgColor = Colors.red.shade50;
+        textColor = Colors.red.shade700;
+        label = 'CANCELLED';
     }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w900, color: textColor, letterSpacing: 1.0),
+      ),
     );
   }
 }

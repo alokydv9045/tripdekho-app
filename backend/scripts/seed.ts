@@ -36,7 +36,7 @@ async function seedDatabase() {
   const dbType = process.env.DB_TYPE || 'postgres';
   const dataSourceConfig: any = {
     entities: [__dirname + '/../src/entities/*.entity{.ts,.js}'],
-    synchronize: false,
+    synchronize: true,
     logging: false,
   };
 
