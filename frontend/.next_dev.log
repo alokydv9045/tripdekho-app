@@ -1,0 +1,49 @@
+
+> tripdekho-frontend@1.0.0 dev
+> next dev -p 3001 --webpack
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/shivamgupta/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/shivamgupta/tripdekho/tripdekho/frontend/package-lock.json
+
+▲ Next.js 16.1.6 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://10.124.219.38:3001
+- Environments: .env.local
+- Experiments (use with caution):
+  ✓ optimizeCss
+  ✓ scrollRestoration
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 2.3s
+○ Compiling / ...
+(node:55980) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Failed to fetch homepage trips Error [AggregateError]: Error
+    at async Object.getAllTrips (src/services/tripService.ts:6:22)
+    at async getHomepageData (src/app/page.tsx:14:17)
+    at async Home (src/app/page.tsx:25:17)
+  4 |   // Get all trips (with optional filters)
+  5 |   getAllTrips: async (params?: Record<string, any>) => {
+> 6 |     const response = await axiosPublic.get('/trips', { params });
+    |                      ^
+  7 |     return response.data;
+  8 |   },
+  9 | {
+  code: 'ECONNREFUSED',
+  errors: [Array],
+  config: [Object],
+  request: [Writable],
+  constructor: [Function],
+  toJSON: [Function: toJSON],
+  [cause]: AggregateError: 
+      at ignore-listed frames {
+    code: 'ECONNREFUSED'
+  }
+}
+ GET / 200 in 4.1s (compile: 3.9s, proxy.ts: 37ms, render: 241ms)
+[?25h

@@ -1,0 +1,107 @@
+# Kubernetes Deployment for Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tripdekho-backend
+  labels:
+    app: tripdekho
+    component: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tripdekho
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: tripdekho
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: tripdekho/backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "5000"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: tripdekho-secrets
+              key: mongo-uri
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: tripdekho-secrets
+              key: redis-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tripdekho-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Service for Backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: tripdekho-backend-service
+spec:
+  selector:
+    app: tripdekho
+    component: backend
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: ClusterIP
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tripdekho-backend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tripdekho-backend
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

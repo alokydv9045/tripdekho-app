@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tripdekho-frontend
+  labels:
+    app: tripdekho-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tripdekho-frontend
+  template:
+    metadata:
+      labels:
+        app: tripdekho-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: tripdekho-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://tripdekho-backend:5000/api/v1"
+        - name: NEXT_PUBLIC_SOCKET_URL
+          value: "http://tripdekho-backend:5000"
+        - name: NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tripdekho-secrets
+              key: stripe-public-key
+              optional: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tripdekho-frontend
+  labels:
+    app: tripdekho-frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: tripdekho-frontend
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tripdekho-frontend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tripdekho-frontend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

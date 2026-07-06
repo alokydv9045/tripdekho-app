@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: TripDekho-mongodb-test
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: testpassword
+      MONGO_INITDB_DATABASE: TripDekho_test
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_test_data:/data/db
+    networks:
+      - test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: TripDekho-redis-test
+    restart: always
+    command: redis-server --requirepass testpassword
+    ports:
+      - "6379:6379"
+    networks:
+      - test-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: TripDekho-backend-test
+    restart: always
+    environment:
+      NODE_ENV: test
+      PORT: 5000
+      MONGO_URI: mongodb://admin:testpassword@mongodb:27017/TripDekho_test?authSource=admin
+      REDIS_URL: redis://:testpassword@redis:6379
+      JWT_SECRET: test-jwt-secret
+      JWT_EXPIRE: 1d
+      CLIENT_URL: http://localhost:3000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - test-network
+    command: npm test
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  mongodb_test_data:
+    driver: local

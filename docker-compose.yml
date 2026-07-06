@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tripdekho-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redispassword}
+    volumes:
+      - redis_data:/data
+    networks:
+      - tripdekho-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tripdekho-backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: 5001
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redispassword}@redis:6379
+    ports:
+      - "5001:5001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tripdekho-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5001/api/v2/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: tripdekho-frontend
+    restart: always
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:5001/api/v2
+      INTERNAL_API_URL: http://backend:5001/api/v2
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      NEXT_PUBLIC_ENV: development
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - tripdekho-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: tripdekho-nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - tripdekho-network
+
+  # Media Storage (Restored for VPS)
+  storage:
+    image: minio/minio
+    container_name: tripdekho-storage-new
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_secret123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      tripdekho-network:
+        aliases:
+          - minio
+
+networks:
+  tripdekho-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
