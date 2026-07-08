@@ -1,94 +1,123 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../data/datasources/api_client.dart';
-import '../../data/models/user_model.dart';
-import '../../data/repositories/auth_repository.dart';
+import '../../core/network/api_client.dart';
+import '../../domain/entities/user_entity.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_customer_usecase.dart';
+import '../../domain/usecases/register_vendor_usecase.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
+// 1. Provide the Dependencies
+final authRepositoryProvider = Provider((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return AuthRepository(apiClient);
+  final storage = ref.watch(secureStorageProvider);
+  return AuthRepositoryImpl(apiClient, storage);
 });
 
+final loginUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return LoginUseCase(repository);
+});
+
+final registerCustomerUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return RegisterCustomerUseCase(repository);
+});
+
+final registerVendorUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return RegisterVendorUseCase(repository);
+});
+
+// 2. Define the State
 class AuthState {
-  final UserModel? user;
   final bool isLoading;
+  final UserEntity? user;
   final String? error;
 
-  AuthState({this.user, this.isLoading = false, this.error});
+  AuthState({this.isLoading = false, this.user, this.error});
 
-  AuthState copyWith({UserModel? user, bool? isLoading, String? error, bool clearError = false}) {
+  AuthState copyWith({bool? isLoading, UserEntity? user, String? error, bool clearError = false}) {
     return AuthState(
-      user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
+      user: user ?? this.user,
       error: clearError ? null : (error ?? this.error),
     );
   }
 }
 
+// 3. Define the Notifier
 class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _repository;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final LoginUseCase _loginUseCase;
+  final RegisterCustomerUseCase _registerCustomerUseCase;
+  final RegisterVendorUseCase _registerVendorUseCase;
+  final AuthRepositoryImpl _repository;
 
-  AuthNotifier(this._repository) : super(AuthState()) {
-    checkAuth();
+  AuthNotifier(
+    this._loginUseCase,
+    this._registerCustomerUseCase,
+    this._registerVendorUseCase,
+    this._repository,
+  ) : super(AuthState()) {
+    _checkInitialAuth();
   }
 
-  Future<void> checkAuth() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> _checkInitialAuth() async {
+    state = state.copyWith(isLoading: true);
     try {
-      final token = await _storage.read(key: 'access_token');
-      if (token != null) {
-        final user = await _repository.getMe();
-        state = state.copyWith(user: user, isLoading: false);
-      } else {
-        state = state.copyWith(isLoading: false);
-      }
+      final user = await _repository.checkAuthStatus();
+      state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Session expired');
-      await _storage.deleteAll();
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final data = await _repository.login(email, password);
-      
-      final accessToken = data['accessToken'] ?? data['token'];
-      final refreshToken = data['refreshToken'];
-
-      if (accessToken != null) {
-        await _storage.write(key: 'access_token', value: accessToken);
-      }
-      if (refreshToken != null) {
-        await _storage.write(key: 'refresh_token', value: refreshToken);
-      }
-
-      final user = await _repository.getMe();
-      state = state.copyWith(user: user, isLoading: false);
-      return true;
+      final user = await _loginUseCase.execute(email, password);
+      state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
+    }
+  }
+
+  Future<void> registerCustomer(String name, String email, String password, String phone) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final user = await _registerCustomerUseCase.execute(name, email, password, phone);
+      state = state.copyWith(isLoading: false, user: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> registerVendor(String businessName, String email, String password, String phone, String description) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final user = await _registerVendorUseCase.execute(businessName, email, password, phone, description);
+      state = state.copyWith(isLoading: false, user: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> logout() async {
-    state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      await _repository.logout();
-    } catch (e) {
-      // ignore logout error
-    } finally {
-      await _storage.deleteAll();
-      state = AuthState(); // Reset state
-    }
+    state = state.copyWith(isLoading: true);
+    await _repository.logout();
+    state = AuthState(); // Reset state
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+// 4. Expose the Notifier via Provider
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final loginUseCase = ref.watch(loginUseCaseProvider);
+  final registerCustomerUseCase = ref.watch(registerCustomerUseCaseProvider);
+  final registerVendorUseCase = ref.watch(registerVendorUseCaseProvider);
   final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository);
+  return AuthNotifier(
+    loginUseCase,
+    registerCustomerUseCase,
+    registerVendorUseCase,
+    repository as AuthRepositoryImpl,
+  );
 });

@@ -1,167 +1,190 @@
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import '../../presentation/layouts/main_layout.dart';
-import '../../presentation/screens/home_screen.dart';
-import '../../presentation/screens/trips/trips_screen.dart';
-import '../../presentation/screens/trips/trip_detail_screen.dart';
-import '../../presentation/screens/trips/search_screen.dart';
-import '../../presentation/screens/bookings/my_bookings_screen.dart';
-import '../../presentation/screens/bookings/booking_detail_screen.dart';
-import '../../presentation/screens/profile/profile_screen.dart';
-import '../../presentation/screens/profile/wishlist_screen.dart';
-import '../../presentation/screens/profile/settings_screen.dart';
-import '../../presentation/screens/chat/messages_screen.dart';
-import '../../presentation/screens/chat/chat_detail_screen.dart';
-import '../../presentation/screens/notifications/notifications_screen.dart';
-import '../../presentation/screens/ai_planner/ai_planner_screen.dart';
-import '../../presentation/screens/vlog/vlog_list_screen.dart';
-import '../../presentation/screens/vlog/vlog_detail_screen.dart';
-import '../../presentation/screens/public/static_page_screen.dart';
-import '../../presentation/screens/public/contact_screen.dart';
-import '../../presentation/screens/public/faq_screen.dart';
-import '../../presentation/screens/vendor/vendor_dashboard_screen.dart';
-import '../../presentation/screens/vendor/my_trips_screen.dart';
-import '../../presentation/screens/vendor/create_trip_screen.dart';
-import '../../presentation/screens/vendor/vendor_bookings_screen.dart';
-import '../../presentation/screens/vendor/vendor_onboarding_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../presentation/providers/auth_provider.dart';
+import '../../presentation/layouts/main_layout.dart';
+import '../../presentation/screens/home/home_screen.dart';
+import '../../presentation/screens/auth/login_screen.dart';
+import '../../presentation/screens/auth/register_screen.dart';
+import '../../presentation/screens/auth/vendor_register_screen.dart';
+import '../../presentation/screens/vendor/vendor_dashboard_screen.dart';
+import '../../presentation/screens/vendor/vendor_trips_screen.dart';
+import '../../presentation/screens/vendor/add_trip_screen.dart';
+import '../../presentation/screens/trips/trips_list_screen.dart';
+import '../../presentation/screens/trip/trip_details_screen.dart';
+import '../../presentation/screens/booking/booking_screen.dart';
+import '../../presentation/screens/bookings/my_bookings_screen.dart';
+import '../../presentation/screens/chat/chat_list_screen.dart';
+import '../../presentation/screens/chat/chat_detail_screen.dart';
+import '../../presentation/screens/profile/profile_screen.dart';
+import '../../presentation/screens/saved/saved_screen.dart';
+import '../../presentation/screens/onboarding/onboarding_screen.dart';
+import '../../presentation/screens/vendor/vendor_bookings_screen.dart';
+import '../../presentation/screens/vendor/vendor_payout_screen.dart';
+import '../../presentation/screens/ai_planner/ai_planner_screen.dart';
+import '../../presentation/screens/vlog/vlog_screen.dart';
+import '../../presentation/screens/notifications/notifications_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+// Create GlobalKeys for Navigators
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-class AppRouter {
-  static final GoRouter router = GoRouter(
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authNotifierProvider);
+
+  return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    redirect: (context, state) {
+      if (authState.isLoading && authState.user == null && authState.error == null) {
+        return null;
+      }
+
+      final box = Hive.box('settings');
+      final hasSeenOnboarding = box.get('has_seen_onboarding', defaultValue: false);
+      final isGoingToOnboarding = state.matchedLocation == '/onboarding';
+
+      if (!hasSeenOnboarding && !isGoingToOnboarding) {
+        return '/onboarding';
+      }
+      
+      if (hasSeenOnboarding && isGoingToOnboarding) {
+        return '/login';
+      }
+
+      final isLoggedIn = authState.user != null;
+      final isAuthRoute = state.matchedLocation == '/login' || 
+                          state.matchedLocation == '/register' || 
+                          state.matchedLocation == '/register-vendor';
+
+      if (hasSeenOnboarding && !isLoggedIn && !isAuthRoute) {
+        return '/login';
+      }
+
+      if (isLoggedIn && isAuthRoute) {
+        return '/';
+      }
+
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/register-vendor',
+        builder: (context, state) => const VendorRegisterScreen(),
+      ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) => MainLayout(child: child),
+        builder: (context, state, child) {
+          return MainLayout(child: child);
+        },
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => const HomeScreen(),
+            builder: (context, state) {
+              final authState = ref.watch(authNotifierProvider);
+              if (authState.user?.role == 'vendor') {
+                return const VendorDashboardScreen();
+              }
+              return const HomeScreen();
+            },
+          ),
+          GoRoute(
+            path: '/saved',
+            builder: (context, state) => const SavedScreen(),
           ),
           GoRoute(
             path: '/trips',
-            builder: (context, state) => const TripsScreen(),
-          ),
-          GoRoute(
-            path: '/bookings',
-            builder: (context, state) => const MyBookingsScreen(),
+            builder: (context, state) {
+              final category = state.uri.queryParameters['category'];
+              final search = state.uri.queryParameters['search'];
+              return TripsListScreen(
+                initialCategory: category,
+                initialSearch: search,
+              );
+            },
           ),
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
           GoRoute(
-            path: '/wishlist',
-            builder: (context, state) => const WishlistScreen(),
+            path: '/my-bookings',
+            builder: (context, state) => const MyBookingsScreen(),
           ),
           GoRoute(
-            path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
+            path: '/vendor/trips',
+            builder: (context, state) => const VendorTripsScreen(),
           ),
           GoRoute(
-            path: '/search',
-            builder: (context, state) => const SearchScreen(),
+            path: '/vendor/add-trip',
+            builder: (context, state) => const AddTripScreen(),
           ),
           GoRoute(
-            path: '/messages',
-            builder: (context, state) => const MessagesScreen(),
+            path: '/chats',
+            builder: (context, state) => const ChatListScreen(),
           ),
           GoRoute(
-            path: '/notifications',
-            builder: (context, state) => const NotificationsScreen(),
+            path: '/vendor/bookings',
+            builder: (context, state) => const VendorBookingsScreen(),
+          ),
+          GoRoute(
+            path: '/vendor/payouts',
+            builder: (context, state) => const VendorPayoutScreen(),
           ),
           GoRoute(
             path: '/ai-planner',
             builder: (context, state) => const AiPlannerScreen(),
           ),
           GoRoute(
-            path: '/vlog',
-            builder: (context, state) => const VlogListScreen(),
+            path: '/vlogs',
+            builder: (context, state) => const VlogScreen(),
           ),
           GoRoute(
-            path: '/about',
-            builder: (context, state) => const StaticPageScreen(title: 'About Us'),
-          ),
-          GoRoute(
-            path: '/contact',
-            builder: (context, state) => const ContactScreen(),
-          ),
-          GoRoute(
-            path: '/faq',
-            builder: (context, state) => const FaqScreen(),
-          ),
-          GoRoute(
-            path: '/terms',
-            builder: (context, state) => const StaticPageScreen(title: 'Terms & Conditions'),
-          ),
-          GoRoute(
-            path: '/privacy',
-            builder: (context, state) => const StaticPageScreen(title: 'Privacy Policy'),
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
           ),
         ],
       ),
-      // Detail routes and nested flows that might not need the shell or want a full screen
+      // Details and Booking screens are outside the ShellRoute so they cover the bottom nav bar when opened
       GoRoute(
-        path: '/trips/:slug',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) {
-          final slug = state.pathParameters['slug']!;
-          return TripDetailScreen(slug: slug);
-        },
-      ),
-      GoRoute(
-        path: '/bookings/:id',
-        parentNavigatorKey: _rootNavigatorKey,
+        path: '/trip/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return BookingDetailScreen(bookingId: id);
+          return TripDetailsScreen(tripId: id);
         },
       ),
       GoRoute(
-        path: '/messages/:id',
         parentNavigatorKey: _rootNavigatorKey,
+        path: '/trip/:id/book',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ChatDetailScreen(chatId: id);
+          return BookingScreen(tripId: id);
         },
       ),
       GoRoute(
-        path: '/vlog/:id',
         parentNavigatorKey: _rootNavigatorKey,
+        path: '/chat/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return VlogDetailScreen(vlogId: id);
+          final otherUserName = state.extra as String? ?? 'Partner';
+          return ChatDetailScreen(chatId: id, otherUserName: otherUserName);
         },
-      ),
-      // Vendor Portal Routes
-      GoRoute(
-        path: '/vendor/onboarding',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const VendorOnboardingScreen(),
-      ),
-      GoRoute(
-        path: '/vendor/dashboard',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const VendorDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/vendor/trips',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const MyTripsScreen(),
-      ),
-      GoRoute(
-        path: '/vendor/trips/create',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const CreateTripScreen(),
-      ),
-      GoRoute(
-        path: '/vendor/bookings',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const VendorBookingsScreen(),
       ),
     ],
   );
-}
+});

@@ -1,138 +1,168 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
 
-class ChatDetailScreen extends StatefulWidget {
+class ChatDetailScreen extends ConsumerStatefulWidget {
   final String chatId;
-  const ChatDetailScreen({super.key, required this.chatId});
+  final String otherUserName;
+
+  const ChatDetailScreen({
+    super.key,
+    required this.chatId,
+    required this.otherUserName,
+  });
 
   @override
-  State<ChatDetailScreen> createState() => _ChatDetailScreenState();
+  ConsumerState<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
-class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  final _messageCtrl = TextEditingController();
+class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
+  final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() {
+    final text = _messageController.text.trim();
+    if (text.isNotEmpty) {
+      ref.read(chatMessagesProvider(widget.chatId).notifier).sendMessage(text);
+      _messageController.clear();
+      // Assume the message will be added optimistically or echoed, we scroll down
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final messagesAsync = ref.watch(chatMessagesProvider(widget.chatId));
+    final currentUser = ref.watch(authNotifierProvider).user;
+
     return Scaffold(
-      backgroundColor: AppColors.bgCream,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Row(
-          children: [
-            const SizedBox(width: 8),
-            const CircleAvatar(
-              backgroundImage: AssetImage('assets/images/ui/aman-founder.png'), // placeholder
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('Himalayan Treks', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('Online', style: TextStyle(fontSize: 12, color: Colors.green)),
-              ],
-            )
-          ],
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+        title: Text(widget.otherUserName),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        elevation: 1,
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              reverse: true, // typical chat setup
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                final isMe = index % 2 == 0;
-                return _buildMessageBubble(isMe, index);
+            child: messagesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(child: Text('Error: $error')),
+              data: (messages) {
+                // In a real app we want to auto-scroll to bottom, here we rely on reverse: true if we reversed the list,
+                // but let's just use normal list and scroll controller
+                
+                // If using normal direction, let's schedule a scroll to bottom on first load
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                  }
+                });
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    final isMe = message.senderId == currentUser?.id;
+
+                    return Align(
+                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isMe ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(16).copyWith(
+                            bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(16),
+                            bottomLeft: !isMe ? const Radius.circular(0) : const Radius.circular(16),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.content,
+                              style: TextStyle(
+                                color: isMe ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              DateFormat('hh:mm a').format(message.createdAt.toLocal()),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isMe ? theme.colorScheme.onPrimary.withOpacity(0.7) : theme.colorScheme.onSurface.withOpacity(0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
-          _buildMessageInput(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(bool isMe, int index) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isMe ? AppColors.primaryYellow : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 16),
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
-          ]
-        ),
-        child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Text(
-              isMe ? 'Yes, please arrange the pickup. Thanks!' : 'We can arrange a pickup from the airport.',
-              style: TextStyle(color: AppColors.darkText),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('10:3$index AM', style: TextStyle(color: isMe ? Colors.black54 : AppColors.grey500, fontSize: 10)),
-                if (isMe) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.done_all, size: 14, color: Colors.black54),
-                ]
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMessageInput() {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(
-        left: 16, 
-        right: 16, 
-        top: 8, 
-        bottom: MediaQuery.of(context).padding.bottom + 8
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.attach_file, color: AppColors.grey500),
-            onPressed: () {},
-          ),
-          Expanded(
-            child: TextField(
-              controller: _messageCtrl,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: const TextStyle(color: AppColors.grey500),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                filled: true,
-                fillColor: AppColors.grey50,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+          
+          // Message Input Bar
           Container(
-            decoration: const BoxDecoration(color: AppColors.primaryYellow, shape: BoxShape.circle),
-            child: IconButton(
-              icon: const Icon(Icons.send, color: AppColors.darkText, size: 20),
-              onPressed: () {},
+            padding: const EdgeInsets.all(16).copyWith(bottom: MediaQuery.of(context).padding.bottom + 16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
+              ],
             ),
-          )
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: theme.colorScheme.primary,
+                  radius: 24,
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: _sendMessage,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

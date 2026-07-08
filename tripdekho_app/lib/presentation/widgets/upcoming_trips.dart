@@ -12,7 +12,8 @@ class UpcomingTrips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tripsAsync = ref.watch(fetchTripsProvider(category: null, search: null));
+    // Fetch upcoming trips (we can just fetch all trips for now and maybe limit on UI side if needed)
+    final tripsAsync = ref.watch(allTripsProvider({'category': '', 'search': ''}));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,17 +51,17 @@ class UpcomingTrips extends ConsumerWidget {
                       width: 270,
                       child: TripCard(
                         title: trip.title,
-                        location: '${trip.location.city}, ${trip.location.country}',
-                        price: trip.price.amount.toDouble(),
-                        originalPrice: trip.price.originalPrice?.toDouble(),
-                        duration: '${trip.durationNights}n ${trip.durationDays}d',
-                        rating: 4.8, // placeholder
-                        reviewsCount: 120, // placeholder
-                        imageUrl: trip.thumbnail?.url ?? 'assets/images/trips/ladakh.png',
-                        slug: trip.slug ?? trip.id,
-                        categories: trip.category,
-                        dates: trip.dates?.map((d) => DateFormat('MMM d').format(d.startDate)).toList(),
-                        onTap: () => context.push('/trips/${trip.slug ?? trip.id}'),
+                        location: trip.location,
+                        price: trip.price,
+                        originalPrice: null,
+                        duration: '4n 5d',
+                        rating: trip.rating,
+                        reviewsCount: trip.reviews,
+                        imageUrl: trip.imageUrl,
+                        slug: trip.id,
+                        categories: null,
+                        dates: null,
+                        onTap: () => context.push('/trip/${trip.id}'),
                       ),
                     ),
                   );

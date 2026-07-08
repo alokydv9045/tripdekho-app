@@ -28,9 +28,9 @@ class TripCategorySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch trips based on filters. Limit to 8 by default as per the web design.
-    final tripsAsync = ref.watch(fetchTripsProvider(category: category, tags: tags, limit: 8));
+    final tripsAsync = ref.watch(allTripsProvider({'category': category ?? '', 'search': tags ?? ''}));
     // Always fetch a fallback set of all trips so we never show empty sections
-    final allTripsAsync = ref.watch(fetchTripsProvider(limit: 8));
+    final allTripsAsync = ref.watch(allTripsProvider({'category': '', 'search': ''}));
 
     return tripsAsync.when(
       data: (trips) {
@@ -73,18 +73,17 @@ class TripCategorySection extends ConsumerWidget {
                         width: 270,
                         child: TripCard(
                           title: trip.title,
-                          location: '${trip.location.city}, ${trip.location.country}',
-                          price: trip.price.amount.toDouble(),
-                          originalPrice: trip.price.originalPrice?.toDouble(),
-                          duration: '${trip.durationNights}n ${trip.durationDays}d',
-                          rating: 4.8,
-                          reviewsCount: 120,
-                          imageUrl: trip.thumbnail?.url ??
-                              'assets/images/trips/ladakh.png',
-                          slug: trip.slug ?? trip.id,
-                          categories: trip.category,
-                          dates: trip.dates?.map((d) => DateFormat('MMM d').format(d.startDate)).toList(),
-                          onTap: () => context.push('/trips/${trip.slug ?? trip.id}'),
+                          location: trip.location,
+                          price: trip.price,
+                          originalPrice: null, // Removed from entity
+                          duration: '4n 5d', // Placeholder
+                          rating: trip.rating,
+                          reviewsCount: trip.reviews,
+                          imageUrl: trip.imageUrl,
+                          slug: trip.id,
+                          categories: category != null ? [category!] : null,
+                          dates: null,
+                          onTap: () => context.push('/trip/${trip.id}'),
                         ),
                       ),
                     );

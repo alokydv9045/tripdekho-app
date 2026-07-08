@@ -1,25 +1,35 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../data/models/booking_model.dart';
-import '../../data/repositories/booking_repository.dart';
-import '../../data/datasources/api_client.dart';
-import 'auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_client.dart';
+import '../../domain/entities/booking_entity.dart';
+import '../../data/repositories/booking_repository_impl.dart';
 
-part 'booking_provider.g.dart';
+final bookingRepositoryProvider = Provider((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return BookingRepositoryImpl(apiClient);
+});
 
-@riverpod
-BookingRepository bookingRepository(BookingRepositoryRef ref) {
-  final dio = ref.watch(apiClientProvider).privateDio;
-  return BookingRepository(dio);
-}
-
-@riverpod
-Future<List<BookingModel>> fetchMyBookings(FetchMyBookingsRef ref) async {
+final myBookingsProvider = FutureProvider<List<BookingEntity>>((ref) async {
   final repository = ref.watch(bookingRepositoryProvider);
-  return repository.getMyBookings();
+  return await repository.getMyBookings();
+});
+
+class BookingNotifier extends StateNotifier<AsyncValue<BookingEntity?>> {
+  final BookingRepositoryImpl _repository;
+
+  BookingNotifier(this._repository) : super(const AsyncValue.data(null));
+
+  Future<void> createBooking(String tripId, int numGuests, DateTime date) async {
+    state = const AsyncValue.loading();
+    try {
+      final booking = await _repository.createBooking(tripId, numGuests, date);
+      state = AsyncValue.data(booking);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }
 
-@riverpod
-Future<BookingModel?> fetchBookingDetail(FetchBookingDetailRef ref, String id) async {
+final bookingNotifierProvider = StateNotifierProvider<BookingNotifier, AsyncValue<BookingEntity?>>((ref) {
   final repository = ref.watch(bookingRepositoryProvider);
-  return repository.getBookingById(id);
-}
+  return BookingNotifier(repository as BookingRepositoryImpl);
+});
